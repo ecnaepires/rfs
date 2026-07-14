@@ -1,0 +1,2314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFS Grupo Holding</title>
+    <meta
+      name="description"
+      content="RFS is the long-horizon holding company behind Sunergies Group and a diversified energy ecosystem in Brazil."
+    />
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --black: oklch(12% 0.008 90);
+        --black-deep: oklch(8% 0.006 90);
+        --surface: oklch(16% 0.012 92);
+        --line: oklch(30% 0.025 95);
+        --text: oklch(93% 0.012 95);
+        --muted: oklch(70% 0.02 95);
+        --gold: #d4af37;
+        --gold-hot: oklch(85% 0.115 98);
+        --gold-deep: oklch(58% 0.1 92);
+        --ink-on-gold: oklch(14% 0.01 90);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --z-header: 40;
+        --z-toggle: 50;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 76px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--black);
+        color: var(--text);
+        font-family: "Archivo", system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.65;
+        overflow-x: hidden;
+      }
+
+      ::selection {
+        background: var(--gold);
+        color: var(--ink-on-gold);
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: calc(var(--z-toggle) + 1);
+        padding: 0.65rem 0.9rem;
+        background: var(--gold);
+        color: var(--ink-on-gold);
+        font-weight: 700;
+        text-decoration: none;
+        transform: translateY(-160%);
+      }
+      .skip-link:focus { transform: translateY(0); }
+
+      :focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 4px;
+      }
+
+      .site-header {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: var(--z-header);
+        background: transparent;
+      }
+      .site-header.is-scrolled {
+        background: var(--black-deep);
+        border-bottom: 1px solid var(--line);
+      }
+      .header-inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 1.1rem clamp(1.25rem, 4vw, 3rem);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: var(--text);
+        margin-right: auto;
+      }
+      .brand-name {
+        font-weight: 900;
+        font-stretch: 125%;
+        letter-spacing: -0.01em;
+        font-size: 1.05rem;
+      }
+      .site-nav {
+        display: flex;
+        gap: 1.75rem;
+      }
+      .site-nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        position: relative;
+      }
+      .site-nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 100%;
+        height: 1px;
+        background: var(--gold);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s var(--ease);
+      }
+      .site-nav a:hover {
+        color: var(--text);
+      }
+      .site-nav a:hover::after,
+      .site-nav a[aria-current="page"]::after {
+        transform: scaleX(1);
+      }
+      .site-nav a[aria-current="page"] { color: var(--text); }
+
+      .lang-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      .lang-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        font: inherit;
+        font-weight: inherit;
+      }
+      .lang-btn.is-active {
+        color: var(--gold);
+      }
+      .lang-sep {
+        color: var(--line);
+      }
+      .hero {
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: var(--black-deep);
+        overflow: hidden;
+        padding: 6rem 1.5rem;
+      }
+      .hero-glow {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 60%;
+        background: radial-gradient(
+          ellipse at bottom,
+          var(--gold-deep) 0%,
+          transparent 70%
+        );
+        opacity: 0.08;
+        pointer-events: none;
+      }
+      .horizon-line {
+        position: absolute;
+        left: 50%;
+        top: 78%;
+        width: min(900px, 90vw);
+        height: 1px;
+        background: var(--gold);
+        transform: translateX(-50%) scaleX(0);
+        transform-origin: center;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .hero-mark {
+        width: clamp(120px, 18vw, 180px);
+        height: auto;
+        margin-bottom: 0.5rem;
+      }
+      .hero-word {
+        font-weight: 900;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(4rem, 10vw, 5.9rem);
+        line-height: 1;
+        color: var(--gold);
+      }
+      .hero-tag {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+      }
+      .hero h1 {
+        font-weight: 850;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(2.8rem, 7vw, 5.25rem);
+        line-height: 1.05;
+        margin: 0;
+        text-wrap: balance;
+        max-width: 16ch;
+      }
+      .hero-sub {
+        color: var(--muted);
+        font-size: 1.15rem;
+        margin: 0.5rem 0 2.5rem;
+      }
+
+      .scroll-cue {
+        width: 1px;
+        height: 32px;
+        background: var(--gold);
+        margin: 0 auto;
+      }
+      @keyframes cue-pulse {
+        0%, 100% { opacity: .3; transform: scaleY(1); }
+        50% { opacity: 1; transform: scaleY(1.4); }
+      }
+      .scroll-cue { animation: cue-pulse 2.2s var(--ease) infinite; transform-origin: top; }
+
+      /* Manifesto */
+      .manifesto {
+        background: var(--black);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .manifesto-inner { max-width: 900px; margin: 0 auto; }
+      .manifesto-lines {
+        font-weight: 800;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        line-height: 1.25;
+        margin: 0 0 2.5rem;
+        text-wrap: balance;
+      }
+      .manifesto-lines em { font-style: normal; color: var(--gold); }
+      .manifesto-p { color: var(--muted); font-size: 1.05rem; max-width: 62ch; line-height: 1.65; }
+      .manifesto-lines span { display: inline-block; opacity: 0; transform: translateY(28px); }
+      .manifesto-lines span.reveal {
+        animation: line-up .7s var(--ease) forwards;
+      }
+      @keyframes line-up { to { opacity: 1; transform: translateY(0); } }
+
+      /* Operating model */
+      .operating-model {
+        background: var(--black);
+        border-top: 1px solid var(--line);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .model-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(240px, .75fr) minmax(0, 1.35fr);
+        gap: clamp(3rem, 8vw, 8rem);
+        align-items: start;
+      }
+      .model-copy {
+        position: sticky;
+        top: 8.5rem;
+      }
+      .model-copy h2 {
+        margin: 0 0 1.25rem;
+        max-width: 10ch;
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-stretch: 125%;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        text-wrap: balance;
+      }
+      .model-intro {
+        margin: 0 0 2rem;
+        max-width: 34ch;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+      .model-thesis {
+        margin: 0;
+        max-width: 26ch;
+        color: var(--gold);
+        font-weight: 700;
+        line-height: 1.45;
+      }
+      .model-layers {
+        position: relative;
+        padding-left: 2rem;
+      }
+      .model-layers::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        background: var(--gold);
+        opacity: .65;
+      }
+      .model-layer {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(150px, .7fr) minmax(0, 1.3fr);
+        gap: clamp(1.5rem, 4vw, 3rem);
+        padding: 2rem 0;
+        border-top: 1px solid var(--line);
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .model-layer:last-child { border-bottom: 1px solid var(--line); }
+      .model-layer::before {
+        content: "";
+        position: absolute;
+        top: 2.5rem;
+        left: calc(-2rem - 4px);
+        width: 9px;
+        height: 9px;
+        background: var(--gold);
+        transform: rotate(45deg);
+      }
+      .layer-name {
+        color: var(--text);
+        font-size: 1rem;
+        font-stretch: 125%;
+        font-weight: 850;
+        letter-spacing: .08em;
+        line-height: 1.3;
+      }
+      .layer-role {
+        display: block;
+        margin-bottom: .5rem;
+        color: var(--gold);
+        font-weight: 700;
+      }
+      .layer-detail p {
+        margin: 0;
+        max-width: 48ch;
+        color: var(--muted);
+      }
+      .model-layers.reveal .model-layer { animation: word-up .65s var(--ease) forwards; }
+      .model-layers.reveal .model-layer:nth-child(2) { animation-delay: .12s; }
+      .model-layers.reveal .model-layer:nth-child(3) { animation-delay: .24s; }
+
+      /* Ecosystem */
+      .ecosystem {
+        position: relative;
+        background: var(--black-deep);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+        overflow: hidden;
+      }
+      .eco-map {
+        position: absolute;
+        right: -4%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: min(46%, 480px);
+        opacity: .9;
+        pointer-events: none;
+      }
+      .eco-map svg { width: 100%; height: auto; display: block; }
+      .eco-map circle { fill: var(--gold); opacity: .1; }
+      .eco-map circle.pulse { animation: dot-pulse 4s ease-in-out infinite; }
+      @keyframes dot-pulse { 0%, 100% { opacity: .1; } 50% { opacity: .6; } }
+      .eco-inner { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; }
+      .ecosystem h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2.2rem, 5vw, 3.4rem); margin: 0 0 1rem;
+      }
+      .eco-intro { color: var(--muted); max-width: 56ch; font-size: 1.05rem; margin: 0 0 3.5rem; }
+
+      .eco-diagram { display: flex; flex-direction: column; align-items: center; }
+      .tier {
+        display: flex; align-items: center; gap: .5rem;
+        border: 1px solid var(--gold); border-radius: 3px;
+        padding: .6rem 1.2rem; background: var(--black-deep);
+        font-weight: 800; font-stretch: 125%; letter-spacing: .04em;
+        color: var(--gold); font-size: .95rem; z-index: 2;
+      }
+      .tier-sunergies { letter-spacing: .18em; font-size: .85rem; margin-top: 1.75rem; }
+      .bus { width: 2px; background: var(--gold); }
+      .bus-top { height: 1.75rem; }
+      .bus-main { height: 2.5rem; }
+
+      .eco-columns {
+        display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3.5rem, 6vw, 6rem);
+        width: 100%; margin-top: -1px; position: relative;
+      }
+      .eco-columns::before {
+        content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+        width: 2px; background: var(--gold); transform: translateX(-50%);
+      }
+      .eco-col { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.6rem; }
+      .eco-col-left { align-items: flex-end; text-align: right; }
+      .eco-col-right { align-items: flex-start; text-align: left; }
+
+      .unit { position: relative; width: 100%; max-width: 380px; }
+      .eco-col-left .unit { margin-left: auto; }
+      .unit-row {
+        background: none; border: none; color: inherit; font: inherit; cursor: pointer;
+        display: flex; align-items: baseline; gap: .6rem; width: 100%; padding: .3rem 0;
+      }
+      .eco-col-left .unit-row { justify-content: flex-end; }
+      .eco-col-right .unit-row { justify-content: flex-start; }
+      .unit-name {
+        font-weight: 700; letter-spacing: .04em; font-size: .95rem; color: var(--text);
+        transition: color .2s var(--ease);
+      }
+      .unit-row:hover .unit-name, .unit-row:focus-visible .unit-name { color: var(--gold); }
+      .unit-row::after {
+        content: "+";
+        color: var(--gold);
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .unit-row[aria-expanded="true"]::after { content: "−"; }
+      .unit-tag { font-size: .72rem; color: var(--muted); letter-spacing: .05em; white-space: nowrap; }
+      .unit-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s var(--ease); }
+      .unit-detail ul { overflow: hidden; list-style: none; margin: 0; padding: 0; }
+      .unit[data-open="true"] .unit-detail { grid-template-rows: 1fr; }
+      .unit-detail li {
+        font-size: .82rem; color: var(--muted); padding: .25rem 0; line-height: 1.5;
+      }
+      .unit-detail .unit-summary {
+        padding-top: .7rem;
+        padding-bottom: .65rem;
+        color: var(--text);
+        font-size: .9rem;
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+      .eco-col-left .unit-detail li { padding-right: 1rem; }
+      .eco-col-right .unit-detail li:not(.unit-summary)::before { content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-right: 8px; vertical-align: middle; }
+      .eco-col-left .unit-detail li:not(.unit-summary)::after { content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-left: 8px; vertical-align: middle; }
+      .unit::before, .unit::after { content: ""; position: absolute; top: 13px; }
+      .unit::before { width: 12px; height: 1px; background: var(--gold); }
+      .unit::after {
+        width: 7px; height: 7px; border: 1.5px solid var(--gold);
+        background: var(--black-deep); transform: translateY(-3px);
+      }
+      .eco-col-left .unit::before { right: -12px; }
+      .eco-col-left .unit::after { right: -22px; }
+      .eco-col-right .unit::before { left: -12px; }
+      .eco-col-right .unit::after { left: -22px; }
+
+      @media (max-width: 879px) {
+        .site-nav { display: none; }
+        .header-inner { padding: 1rem 1.25rem; }
+        .eco-map { width: 60%; opacity: .5; }
+        .eco-columns { grid-template-columns: 1fr; padding-left: 34px; gap: 1.6rem; }
+        .eco-columns::before { left: 10px; }
+        .eco-col-left, .eco-col-right { align-items: flex-start; text-align: left; }
+        .eco-col-left .unit, .eco-col-right .unit { margin-left: 0; }
+        .eco-col-left .unit-row, .eco-col-right .unit-row { justify-content: flex-start; }
+        .eco-col-left .unit-detail li:not(.unit-summary)::after,
+        .eco-col-right .unit-detail li:not(.unit-summary)::before {
+          content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-right: 8px;
+        }
+        .eco-col-left .unit-detail li::before { content: none; }
+        .eco-col-left .unit-detail li { padding-right: 0; }
+        .eco-col-left .unit::before, .eco-col-right .unit::before { left: -22px; right: auto; }
+        .eco-col-left .unit::after, .eco-col-right .unit::after { left: -34px; right: auto; }
+      }
+
+      @media (max-width: 760px) {
+        .model-inner { grid-template-columns: 1fr; gap: 3rem; }
+        .model-copy { position: static; }
+        .model-copy h2 { max-width: 12ch; }
+        .model-intro, .model-thesis { max-width: 36ch; }
+        .model-layer { grid-template-columns: 1fr; gap: .75rem; }
+      }
+
+      /* Flagship gold band */
+      .flagship {
+        position: relative;
+        background: var(--gold);
+        color: var(--ink-on-gold);
+        padding: clamp(5rem, 14vh, 8rem) clamp(1.25rem, 4vw, 3rem);
+        overflow: hidden;
+      }
+      .flag-wipe {
+        position: absolute; inset: 0; background: var(--gold-hot);
+        transform-origin: left; transform: scaleX(0); opacity: 0;
+      }
+      .flag-wipe.reveal { animation: wipe-in .8s var(--ease) forwards; }
+      @keyframes wipe-in {
+        0% { transform: scaleX(0); opacity: 1; }
+        72% { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(1); opacity: 0; }
+      }
+      .flag-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+      .flagship h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2.2rem, 5vw, 3.2rem); margin: 0 0 1.25rem;
+      }
+      .flagship p { font-size: 1.1rem; max-width: 62ch; margin: 0 0 3rem; }
+      .flag-stats { display: flex; gap: clamp(1.5rem, 4vw, 3rem); margin-bottom: 3rem; flex-wrap: wrap; }
+      .stat { padding-right: clamp(1.5rem, 4vw, 3rem); border-right: 1px solid var(--ink-on-gold); }
+      .stat:last-child { border-right: none; }
+      .stat-num, .stat-static {
+        display: block; font-weight: 850; font-stretch: 125%;
+        font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em;
+      }
+      .stat-label { font-size: .78rem; letter-spacing: .08em; opacity: .75; }
+      .flag-cta {
+        display: inline-block; background: var(--ink-on-gold); color: var(--gold);
+        text-decoration: none; font-weight: 700; padding: .85rem 1.6rem; border-radius: 3px;
+        transition: transform .15s var(--ease);
+      }
+      .flag-cta:active { transform: scale(.98); }
+
+      /* Contact + footer */
+      .contact {
+        background: var(--black-deep);
+        text-align: center;
+        padding: clamp(5rem, 16vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .contact h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 .75rem;
+      }
+      .contact p { color: var(--muted); margin: 0 0 2.25rem; }
+      .contact-cta {
+        display: inline-block; border: 1px solid var(--gold); color: var(--gold);
+        text-decoration: none; font-weight: 700; padding: .85rem 1.8rem; border-radius: 3px;
+        transition: transform .15s var(--ease), background .2s var(--ease), color .2s var(--ease);
+      }
+      .contact-cta:hover { background: var(--gold); color: var(--ink-on-gold); }
+      .contact-cta:active { transform: scale(.98); }
+
+      .site-footer { background: var(--black); border-top: 1px solid var(--line); }
+      .footer-inner {
+        max-width: 1240px; margin: 0 auto; padding: 1.5rem clamp(1.25rem, 4vw, 3rem);
+        display: flex; align-items: center; gap: 1rem; color: var(--muted); font-size: .85rem;
+      }
+      .footer-inner .lang-toggle { margin-left: auto; }
+
+      /* Hero entrance */
+      .hero-mark { position: relative; overflow: hidden; clip-path: inset(100% 0 0 0); }
+      .hero-mark.reveal { animation: dome-rise 1.1s var(--ease) forwards; }
+      @keyframes dome-rise { to { clip-path: inset(0 0 0 0); } }
+      .hero-mark::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(100deg, transparent 40%, oklch(100% 0 0 / .55) 50%, transparent 60%);
+        background-size: 220% 100%; background-position: 150% 0;
+      }
+      .hero-mark.shimmer::after { animation: shimmer-sweep 9s ease-in-out infinite; }
+      @keyframes shimmer-sweep { 0%, 88%, 100% { background-position: 150% 0; } 94% { background-position: -50% 0; } }
+
+      .hero-word, .hero-tag, .hero h1, .hero-sub {
+        opacity: 0; transform: translateY(24px);
+      }
+      .hero-word.reveal { animation: word-up .6s var(--ease) forwards; }
+      .hero-tag.reveal { animation: word-up .5s var(--ease) forwards; }
+      .hero h1.reveal { animation: word-up .6s var(--ease) forwards; }
+      .hero-sub.reveal { animation: word-up .5s var(--ease) forwards; }
+      @keyframes word-up { to { opacity: 1; transform: translateY(0); } }
+
+      .horizon-line.reveal { animation: horizon-draw .9s var(--ease) forwards; }
+      @keyframes horizon-draw { to { transform: translateX(-50%) scaleX(1); } }
+
+      .site-header { opacity: 0; }
+      .site-header.reveal { animation: word-up .5s var(--ease) forwards; }
+
+      /* Ecosystem reveal states */
+      .tier, .bus, .eco-columns::before { opacity: 0; }
+      .bus { transform: scaleY(0); transform-origin: top; }
+      .eco-diagram.reveal .tier { animation: word-up .5s var(--ease) forwards; }
+      .eco-diagram.reveal .tier-sunergies { animation-delay: .15s; }
+      .eco-diagram.reveal .bus { animation: bus-grow .5s var(--ease) forwards; animation-delay: .1s; }
+      @keyframes bus-grow { to { opacity: 1; transform: scaleY(1); } }
+      .eco-diagram.reveal .eco-columns::before { animation: bus-grow .6s var(--ease) forwards; animation-delay: .25s; }
+
+      .unit { opacity: 0; transform: translateY(16px); }
+      .eco-diagram.reveal .unit { animation: word-up .55s var(--ease) forwards; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(1) { animation-delay: .35s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(1) { animation-delay: .4s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(2) { animation-delay: .45s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(2) { animation-delay: .5s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(3) { animation-delay: .55s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(3) { animation-delay: .6s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(4) { animation-delay: .65s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(4) { animation-delay: .7s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(5) { animation-delay: .75s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(5) { animation-delay: .8s; }
+
+      .flag-stats .stat { opacity: 0; transform: translateY(12px); }
+      .flag-stats.reveal .stat { animation: word-up .5s var(--ease) forwards; }
+      .flag-stats.reveal .stat:nth-child(2) { animation-delay: .12s; }
+      .flag-stats.reveal .stat:nth-child(3) { animation-delay: .24s; }
+
+      #main { transition: none; }
+      #main:focus { outline: none; }
+      #main.lang-fade { animation: lang-crossfade .18s var(--ease); }
+      @keyframes lang-crossfade { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .scroll-cue, .eco-map circle.pulse, .flag-wipe, .hero-mark::after { animation: none !important; }
+        .manifesto-lines span,
+        .model-layer,
+        .hero-mark, .hero-word, .hero-tag, .hero h1, .hero-sub, .site-header,
+        .tier, .bus, .eco-columns::before, .unit, .flag-stats .stat,
+        .horizon-line {
+          opacity: 1 !important; transform: none !important; clip-path: none !important;
+        }
+        .flag-wipe { transform: scaleX(1); opacity: 0; }
+        html { scroll-behavior: auto; }
+      }
+
+      /* ============ v2 experience layer ("The Crossing") ============ */
+
+      /* Real content stays in the a11y tree (readable by screen readers)
+         even when visually replaced by the canvas experience. */
+      html.experience #fallback-page {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+      }
+      html.experience #fallback-page .skip-link { display: none; }
+
+      #bg-a, #bg-b {
+        position: fixed; inset: 0; z-index: -2; display: none;
+      }
+      #watermark {
+        position: fixed; inset: 0; z-index: -1; display: none;
+        align-items: center; justify-content: center; pointer-events: none;
+      }
+      #watermark span {
+        font-family: "Archivo", sans-serif; font-weight: 900; font-stretch: 125%;
+        letter-spacing: -0.02em; color: var(--gold); opacity: .075;
+        font-size: clamp(3rem, 11vw, 160px); white-space: nowrap; text-align: center;
+        will-change: transform, opacity;
+      }
+      #scene {
+        position: fixed; inset: 0; z-index: 0; display: none; width: 100%; height: 100%;
+        touch-action: none;
+      }
+      #scroll-track { position: relative; width: 100%; height: 900vh; display: none; }
+
+      #experience-intro {
+        position: fixed; inset: 0; z-index: calc(var(--z-toggle) + 10); display: none;
+        align-items: center; justify-content: center; background: var(--black-deep);
+        pointer-events: auto;
+      }
+      #experience-intro .intro-lockup { text-align: center; animation: intro-lockup .9s var(--ease) both; }
+      #experience-intro img { display: block; width: 92px; height: auto; margin: 0 auto .4rem; }
+      #experience-intro strong {
+        display: block; color: var(--gold); font-size: clamp(3.2rem, 9vw, 6rem);
+        font-weight: 900; font-stretch: 125%; letter-spacing: -.02em; line-height: 1;
+      }
+      #experience-intro span {
+        display: block; margin-top: .65rem; color: var(--muted); font-size: .68rem;
+        font-weight: 700; letter-spacing: .28em;
+      }
+      #experience-intro i {
+        display: block; width: min(280px, 54vw); height: 1px; margin: 1.5rem auto 0;
+        background: var(--gold); transform-origin: left; animation: intro-line 1.1s .2s var(--ease) both;
+      }
+      #experience-intro button {
+        position: relative; min-height: 48px; margin-top: 1.75rem; padding: .9rem 1.65rem .85rem;
+        border: 1px solid var(--gold); border-radius: 999px; background: transparent; color: var(--gold);
+        font: 750 .76rem/1 "Archivo", sans-serif; letter-spacing: .12em; cursor: pointer;
+        overflow: hidden; isolation: isolate;
+        box-shadow: inset 0 0 8px oklch(75% .118 96 / .12), 0 0 8px oklch(75% .118 96 / .32);
+        transition: color .3s var(--ease), box-shadow .3s var(--ease), transform .15s var(--ease);
+      }
+      #experience-intro button::before {
+        content: ""; position: absolute; inset: 0; z-index: -1; background: var(--gold);
+        border-radius: inherit; transform: translateY(102%); transition: transform .35s var(--ease);
+      }
+      #experience-intro button:hover {
+        color: var(--ink-on-gold);
+        box-shadow: inset 0 0 8px oklch(75% .118 96 / .2), 0 0 12px oklch(75% .118 96 / .58);
+      }
+      #experience-intro button:hover::before { transform: translateY(0); }
+      #experience-intro button:active { transform: scale(.98); }
+      #experience-intro button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--black-deep), 0 0 0 4px var(--gold), 0 0 12px oklch(75% .118 96 / .55);
+      }
+      @keyframes intro-lockup {
+        0% { opacity: 0; transform: translateY(18px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes intro-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+      @keyframes intro-curtain-out {
+        to { opacity: 0; visibility: hidden; transform: scale(1.025); }
+      }
+
+      #exp-header {
+        position: fixed; inset: 0 0 auto 0; z-index: var(--z-header);
+        display: none; opacity: 0;
+      }
+      .exp-header-inner {
+        max-width: 1240px; margin: 0 auto; padding: 1.1rem clamp(1.25rem, 4vw, 3rem);
+        display: flex; align-items: center; gap: 2rem;
+      }
+      .exp-brand { display: flex; align-items: center; gap: .5rem; margin-right: auto; }
+      .exp-brand-name {
+        font-weight: 900; font-stretch: 125%; letter-spacing: -0.01em; font-size: 1.05rem;
+        color: var(--text);
+      }
+      html.gold-chapter .exp-brand img { filter: brightness(0); }
+      html.gold-chapter .exp-brand-name,
+      html.gold-chapter #exp-header .lang-btn { color: var(--ink-on-gold); }
+
+      #rail {
+        position: fixed; right: 1.4rem; top: 50%; transform: translateY(-50%);
+        z-index: var(--z-toggle); display: none; flex-direction: column; gap: .9rem;
+      }
+      #rail button {
+        position: relative; width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--gold);
+        background: transparent; opacity: .4; cursor: pointer; padding: 0;
+      }
+      #rail button.active { background: var(--gold); opacity: 1; box-shadow: 0 0 0 3px oklch(75% 0.118 96 / .18); }
+      #rail button::after {
+        content: attr(aria-label); position: absolute; right: 1.25rem; top: 50%;
+        transform: translateY(-50%) translateX(4px); opacity: 0; pointer-events: none;
+        color: var(--gold); font-family: "Archivo", sans-serif; font-size: .72rem;
+        font-weight: 700; letter-spacing: .04em; white-space: nowrap;
+        transition: opacity .18s var(--ease), transform .18s var(--ease);
+      }
+      #rail button:hover::after, #rail button:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+      html.gold-chapter #rail button { border-color: var(--ink-on-gold); }
+      html.gold-chapter #rail button.active { background: var(--ink-on-gold); box-shadow: 0 0 0 3px oklch(14% .01 90 / .16); }
+      html.gold-chapter #rail button::after { color: var(--ink-on-gold); }
+
+      #exp-overlays { position: fixed; inset: 0; z-index: 4; pointer-events: none; display: none; }
+      #exp-overlays::before {
+        content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 2px;
+        background: var(--gold); transform: scaleX(var(--journey, 0)); transform-origin: left;
+        opacity: .72;
+      }
+      html.gold-chapter #exp-overlays::before { background: var(--ink-on-gold); }
+      .exp-block {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 0 clamp(1.5rem, 6vw, 4rem); opacity: 0;
+      }
+      .exp-block .inner { max-width: 720px; will-change: transform, filter; }
+      .exp-hero-lockup { margin-bottom: clamp(1rem, 3vh, 1.75rem); }
+      .exp-hero-mark { width: clamp(78px, 11vw, 112px); height: auto; display: block; margin: 0 auto .25rem; }
+      .exp-hero-word {
+        color: var(--gold); font-size: clamp(3.4rem, 9vw, 6rem); font-stretch: 125%;
+        font-weight: 900; letter-spacing: -0.02em; line-height: .95;
+      }
+      .exp-hero-tag { color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: .28em; margin-top: .55rem; }
+      #ov-hero .inner { max-width: 980px; }
+      #ov-hero h2 { font-size: clamp(2.4rem, 5.2vw, 4.8rem); }
+      .exp-scroll-cue {
+        position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+        color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .12em;
+      }
+      .exp-scroll-cue i { display: block; width: 1px; height: 24px; margin: .5rem auto 0; background: var(--gold); animation: cue-pulse 2.2s var(--ease) infinite; transform-origin: top; }
+      .exp-block h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2.2rem, 6vw, 4.8rem); margin: 0 0 1rem; color: var(--text);
+        text-wrap: balance;
+      }
+      .exp-block p { color: var(--muted); font-size: 1.05rem; max-width: 56ch; margin: 0 auto; }
+      .exp-block .exp-lines {
+        font-weight: 800; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(1.8rem, 4.5vw, 3rem); line-height: 1.25; margin: 0 0 1.5rem;
+        text-wrap: balance;
+      }
+      .exp-block .exp-lines em { font-style: normal; color: var(--gold); }
+      .exp-block .exp-role { color: var(--gold); font-weight: 700; display: block; margin-bottom: .5rem; font-size: 1.05rem; }
+      .exp-block .exp-layer-name {
+        font-weight: 850; font-stretch: 125%; letter-spacing: .08em; font-size: .95rem;
+        color: var(--muted); margin-bottom: .75rem;
+      }
+      #ov-manifesto, #ov-model-0, #ov-model-2, #ov-eco-intro, #ov-flagship {
+        justify-content: flex-start; text-align: left;
+      }
+      #ov-manifesto .inner, #ov-model-0 .inner, #ov-model-2 .inner, #ov-eco-intro .inner,
+      #ov-flagship .inner { margin-left: clamp(0rem, 7vw, 7rem); }
+      #ov-model-1 { justify-content: flex-end; text-align: right; }
+      #ov-model-1 .inner { margin-right: clamp(0rem, 7vw, 7rem); }
+      #ov-model-1 p { margin-right: 0; }
+      #ov-flagship .inner { max-width: 880px; }
+      #ov-flagship h2 { font-size: clamp(2.4rem, 5vw, 4rem); }
+      #ov-flagship, #ov-flagship p, #ov-flagship h2 { color: var(--ink-on-gold); }
+      #ov-flagship .exp-flag-stats { display: flex; gap: clamp(1.25rem, 3vw, 2.5rem); justify-content: flex-start; margin: 1.75rem 0; flex-wrap: wrap; }
+      #ov-flagship .exp-stat { padding: 0 clamp(1.25rem, 3vw, 2.5rem); border-right: 1px solid var(--ink-on-gold); }
+      #ov-flagship .exp-stat:last-child { border-right: none; }
+      #ov-flagship .exp-stat-num { display: block; font-weight: 850; font-stretch: 125%; font-size: clamp(1.6rem, 3.5vw, 2.3rem); color: var(--ink-on-gold); }
+      #ov-flagship .exp-stat-label { font-size: .75rem; color: var(--ink-on-gold); opacity: .75; }
+      @media (min-width: 880px) {
+        #ov-flagship .exp-flag-stats { gap: 0; flex-wrap: nowrap; }
+        #ov-flagship .exp-stat { padding: 0 clamp(1rem, 2.4vw, 2rem); }
+        #ov-flagship .exp-stat:first-child { padding-left: 0; }
+      }
+      #ov-flagship .exp-cta {
+        display: inline-block; background: var(--ink-on-gold); color: var(--gold); pointer-events: auto;
+        text-decoration: none; font-weight: 700; padding: .85rem 1.6rem; border-radius: 3px; margin-top: .5rem;
+      }
+      #ov-contact .exp-cta {
+        display: inline-block; border: 1px solid var(--gold); color: var(--gold); pointer-events: auto;
+        text-decoration: none; font-weight: 700; padding: .85rem 1.8rem; border-radius: 3px; margin-top: 1.75rem;
+      }
+      #ov-contact .exp-foot {
+        margin-top: 2.5rem; font-size: .8rem; color: var(--muted);
+      }
+
+      .unit-card {
+        position: fixed; z-index: 4; max-width: 300px; opacity: 0; pointer-events: none;
+        top: 0; left: 0; will-change: transform, opacity;
+      }
+      .unit-card .uc-name {
+        font-weight: 700; letter-spacing: .04em; font-size: .95rem; color: var(--text); display: block;
+      }
+      .unit-card .uc-tag { font-size: .72rem; color: var(--muted); letter-spacing: .05em; margin-left: .5rem; }
+      .unit-card .uc-desc { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; line-height: 1.5; }
+      .unit-card.side-right { text-align: left; }
+      .unit-card.side-left { text-align: right; }
+
+      @media (max-width: 879px) {
+        .unit-card { max-width: 240px; text-align: center !important; }
+        #ov-manifesto, #ov-model-0, #ov-model-1, #ov-model-2, #ov-eco-intro, #ov-flagship {
+          justify-content: center; text-align: center;
+        }
+        #ov-manifesto .inner, #ov-model-0 .inner, #ov-model-1 .inner, #ov-model-2 .inner,
+        #ov-eco-intro .inner, #ov-flagship .inner { margin-left: 0; margin-right: 0; }
+        #ov-model-1 p { margin-right: auto; }
+        #ov-flagship .exp-flag-stats { justify-content: center; }
+      }
+
+      html.experience:not(.experience-entered) { overflow: hidden; }
+      html.experience #experience-intro { display: flex; }
+      html.experience #experience-intro.is-entered { animation: intro-curtain-out .75s var(--ease) forwards; }
+      html.experience #bg-a, html.experience #bg-b { display: block; }
+      html.experience #watermark { display: flex; }
+      html.experience #scene { display: block; }
+      html.experience #scroll-track { display: block; }
+      html.experience #exp-header { display: block; }
+      html.experience #rail { display: flex; }
+      html.experience #exp-overlays { display: block; }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-i18n="a11y.skip">Skip to content</a>
+    <div id="fallback-page">
+    <header class="site-header" id="header">
+      <div class="header-inner">
+        <a class="brand" href="#hero">
+          <img
+            class="mark"
+            src="assets/logo.svg"
+            alt=""
+            width="28"
+            height="17"
+          />
+          <span class="brand-name">RFS</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation" data-i18n-aria="a11y.nav">
+          <a href="#manifesto" data-i18n="nav.manifesto">Manifesto</a>
+          <a href="#operating-model" data-i18n="nav.model">Model</a>
+          <a href="#ecosystem" data-i18n="nav.ecosystem">Ecosystem</a>
+          <a href="#flagship" data-i18n="nav.flagship">Sunergies</a>
+          <a href="#contact" data-i18n="nav.contact">Contact</a>
+        </nav>
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="a11y.language">
+          <button type="button" class="lang-btn is-active" data-lang="en">
+            EN
+          </button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" class="lang-btn" data-lang="pt">PT</button>
+        </div>
+      </div>
+    </header>
+    <section class="hero" id="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="horizon-line" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <img
+          class="hero-mark"
+          src="assets/logo.svg"
+          alt=""
+          width="180"
+          height="108"
+        />
+        <div class="hero-word">RFS</div>
+        <div class="hero-tag" data-i18n="hero.tag">HOLDING GROUP</div>
+        <h1 data-i18n="hero.h1">Building the future of energy.</h1>
+        <p class="hero-sub" data-i18n="hero.sub">Long-horizon governance for an integrated energy ecosystem in Brazil.</p>
+        <div class="scroll-cue" aria-hidden="true"></div>
+      </div>
+    </section>
+    <main id="main" tabindex="-1">
+      <section class="manifesto" id="manifesto">
+        <div class="manifesto-inner">
+          <p class="manifesto-lines">
+            <span data-i18n="man.l1">One holding.</span><br />
+            <span data-i18n="man.l2">An <em>ecosystem</em> of energy.</span><br />
+            <span data-i18n="man.l3">Built to operate for <em>decades</em>, not quarters.</span>
+          </p>
+          <p class="manifesto-p" data-i18n="man.p">
+            RFS is the holding company behind Sunergies Group and its ecosystem — a single
+            governance structure over independent businesses spanning generation,
+            government and corporate energy deals, alternative mobility, digital energy
+            assets, media and R&amp;D. Each company operates with its own team and market focus;
+            RFS sets the direction, capital discipline and time horizon.
+          </p>
+        </div>
+      </section>
+
+      <section class="operating-model" id="operating-model">
+        <div class="model-inner">
+          <div class="model-copy">
+            <h2 data-i18n="model.h2">How the group works</h2>
+            <p class="model-intro" data-i18n="model.intro">
+              Clear roles turn a broad portfolio into one operating system.
+            </p>
+            <p class="model-thesis" data-i18n="model.thesis">
+              One strategic center. One operating platform. Multiple routes to market.
+            </p>
+          </div>
+          <div class="model-layers">
+            <article class="model-layer">
+              <div class="layer-name">RFS</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.rfs.role">Long-horizon governance</span>
+                <p data-i18n="model.rfs.p">Sets the group's direction, capital allocation and portfolio strategy across every company.</p>
+              </div>
+            </article>
+            <article class="model-layer">
+              <div class="layer-name">SUNERGIES GROUP</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.sun.role">Integrated operating platform</span>
+                <p data-i18n="model.sun.p">Coordinates commercial, financial and operational execution across the ecosystem, including shared services and cross-company synergy.</p>
+              </div>
+            </article>
+            <article class="model-layer">
+              <div class="layer-name" data-i18n="model.units.name">ECOSYSTEM COMPANIES</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.units.role">Specialized teams, market by market</span>
+                <p data-i18n="model.units.p">Ten focused businesses, each led by its own team, operating with autonomy inside the group's model.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ecosystem" id="ecosystem">
+        <div class="eco-map" aria-hidden="true">
+          <svg viewBox="0 0 400 460" preserveAspectRatio="xMidYMid meet" id="eco-map-svg"></svg>
+        </div>
+        <div class="eco-inner">
+          <h2 data-i18n="eco.h2">The ecosystem</h2>
+          <p class="eco-intro" data-i18n="eco.intro">
+            RFS governs ten Sunergies Group companies. Ten specialized teams, one energy ecosystem.
+          </p>
+
+          <div class="eco-diagram">
+            <div class="tier tier-rfs">
+              <img src="assets/logo.svg" alt="" width="22" height="13" />
+              <span>RFS</span>
+            </div>
+            <div class="bus bus-top" aria-hidden="true"></div>
+            <div class="tier tier-sunergies">SUNERGIES GROUP</div>
+            <div class="bus bus-main" aria-hidden="true"></div>
+
+            <div class="eco-columns">
+              <ul class="eco-col eco-col-left">
+                <li class="unit" data-unit="usinas">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Usinas de Investimento</span>
+                    <span class="unit-tag" data-i18n="tag.usinas">Generation</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.usinas">Develops and holds power-generation assets — the base layer of the ecosystem.</li>
+                      <li data-i18n="sub.usinas.1">Global investment funds</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sungov">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunGov Deals</span>
+                    <span class="unit-tag" data-i18n="tag.sungov">Government</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sungov">PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.</li>
+                      <li data-i18n="sub.sungov.1">PPAs</li>
+                      <li data-i18n="sub.sungov.2">Distributed generation</li>
+                      <li data-i18n="sub.sungov.3">Own plants</li>
+                      <li data-i18n="sub.sungov.4">Energy efficiency</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunnews">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Sun News</span>
+                    <span class="unit-tag" data-i18n="tag.sunnews">Media</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunnews">News, blog, internal communications and podcast — the voice of the ecosystem.</li>
+                      <li data-i18n="sub.sunnews.1">News</li>
+                      <li data-i18n="sub.sunnews.2">Blog</li>
+                      <li data-i18n="sub.sunnews.3">Internal marketing</li>
+                      <li data-i18n="sub.sunnews.4">Podcast</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="suncashback">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunCashback</span>
+                    <span class="unit-tag" data-i18n="tag.suncashback">Benefits</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.suncashback">Cashback, benefits and incentives that can convert into discounts or new investments.</li>
+                      <li data-i18n="sub.suncashback.1">Cashback & benefits</li>
+                      <li data-i18n="sub.suncashback.2">New-contract incentives</li>
+                      <li data-i18n="sub.suncashback.3">Conversion into discounts or new investments</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunlife">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunLife</span>
+                    <span class="unit-tag" data-i18n="tag.sunlife">Health</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunlife">Health plans, telemedicine and medical services for the group's network.</li>
+                      <li data-i18n="sub.sunlife.1">Health plan</li>
+                      <li data-i18n="sub.sunlife.2">Telemedicine</li>
+                      <li data-i18n="sub.sunlife.3">Medical services</li>
+                      <li data-i18n="sub.sunlife.4">Sustainability & social responsibility</li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+
+              <ul class="eco-col eco-col-right">
+                <li class="unit" data-unit="sunpower">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunPower Deals</span>
+                    <span class="unit-tag" data-i18n="tag.sunpower">Corporate</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunpower">Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.</li>
+                      <li data-i18n="sub.sunpower.1">PPAs</li>
+                      <li data-i18n="sub.sunpower.2">Distributed generation</li>
+                      <li data-i18n="sub.sunpower.3">Own plants</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunsquad">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunSquad</span>
+                    <span class="unit-tag" data-i18n="tag.sunsquad">Partners</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunsquad">The group's partner-development arm, connecting its network, referral programs and mentorship.</li>
+                      <li data-i18n="sub.sunsquad.1">Partner & ambassador network</li>
+                      <li data-i18n="sub.sunsquad.2">Referral programs</li>
+                      <li data-i18n="sub.sunsquad.3">Mentoring & specialized teams</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunchargers">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunChargers</span>
+                    <span class="unit-tag" data-i18n="tag.sunchargers">Mobility</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunchargers">An EV-charging network and convenience concept integrated with clean energy.</li>
+                      <li data-i18n="sub.sunchargers.1">EV-charging network</li>
+                      <li data-i18n="sub.sunchargers.2">Convenience store (concept)</li>
+                      <li data-i18n="sub.sunchargers.3">Clean-energy integration</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sundex">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Sundex</span>
+                    <span class="unit-tag" data-i18n="tag.sundex">Digital</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sundex">Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.</li>
+                      <li data-i18n="sub.sundex.1">Tokenized solar plants</li>
+                      <li data-i18n="sub.sundex.2">Fractional tokens</li>
+                      <li data-i18n="sub.sundex.3">Blockchain</li>
+                      <li data-i18n="sub.sundex.4">Liquidity & democratized investment</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="pdi">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">P&amp;DI</span>
+                    <span class="unit-tag" data-i18n="tag.pdi">Innovation</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.pdi">Research, development, education and carbon-credit initiatives for the energy transition.</li>
+                      <li data-i18n="sub.pdi.1">Research & development</li>
+                      <li data-i18n="sub.pdi.2">Energy innovation</li>
+                      <li data-i18n="sub.pdi.3">In-person courses & efficiency</li>
+                      <li data-i18n="sub.pdi.4">Carbon credits</li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="flagship" id="flagship">
+        <div class="flag-wipe" aria-hidden="true"></div>
+        <div class="flag-inner">
+          <h2 data-i18n="flag.h2">Flagship: Sunergies</h2>
+          <p data-i18n="flag.p">
+            Since 2014, Sunergies has structured and executed solar projects end-to-end —
+            modeling, execution, grid approval and operation — with more than 500 MW across
+            Brazil.
+          </p>
+          <div class="flag-stats">
+            <div class="stat">
+              <span class="stat-num" data-count="2014">0</span>
+              <span class="stat-label" data-i18n="flag.s1l">founded</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="500" data-suffix="+ MW">0</span>
+              <span class="stat-label" data-i18n="flag.s2l">structured</span>
+            </div>
+            <div class="stat">
+              <span class="stat-static" data-i18n="flag.s3n">End-to-end</span>
+              <span class="stat-label" data-i18n="flag.s3l">full lifecycle</span>
+            </div>
+          </div>
+          <a class="flag-cta" href="https://sunergies.com.br" target="_blank" rel="noopener" data-i18n="flag.cta">
+            Visit sunergies.com.br →
+          </a>
+        </div>
+      </section>
+
+      <section class="contact" id="contact">
+        <div class="contact-inner">
+          <h2 data-i18n="con.h2">Open a conversation</h2>
+          <p data-i18n="con.p">For investment, partnership, institutional or press inquiries, reach the group through its official contact channel.</p>
+          <a class="contact-cta" href="https://sunergies.com.br/#contato" target="_blank" rel="noopener" data-i18n="con.cta">Contact the group ↗</a>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <img src="assets/logo.svg" alt="" width="20" height="12" />
+        <span data-i18n="foot.line">RFS Grupo Holding — Brasil · © 2026</span>
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="a11y.language">
+          <button type="button" class="lang-btn is-active" data-lang="en">EN</button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" class="lang-btn" data-lang="pt">PT</button>
+        </div>
+      </div>
+    </footer>
+    </div>
+
+    <div id="experience-intro" role="dialog" aria-modal="true" aria-labelledby="experience-title">
+      <div class="intro-lockup">
+        <img src="assets/logo.svg" alt="" width="92" height="55" />
+        <strong id="experience-title">RFS</strong>
+        <span data-i18n="hero.tag">HOLDING GROUP</span>
+        <i></i>
+        <button id="enter-experience" type="button" data-i18n="exp.enter">ENTER THE ECOSYSTEM</button>
+      </div>
+    </div>
+    <div id="bg-a" aria-hidden="true"></div>
+    <div id="bg-b" aria-hidden="true"></div>
+    <div id="watermark" aria-hidden="true"><span id="watermark-text"></span></div>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div id="scroll-track" aria-hidden="true"></div>
+
+    <header id="exp-header">
+      <div class="exp-header-inner">
+        <span class="exp-brand">
+          <img src="assets/logo.svg" alt="" width="24" height="14" />
+          <span class="exp-brand-name">RFS</span>
+        </span>
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="a11y.language">
+          <button type="button" class="lang-btn is-active" data-lang="en" tabindex="-1">EN</button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" class="lang-btn" data-lang="pt" tabindex="-1">PT</button>
+        </div>
+      </div>
+    </header>
+
+    <nav id="rail" aria-label="Chapters">
+      <button type="button" data-target="0" data-i18n-aria="rail.0" aria-label="Start"></button>
+      <button type="button" data-target="1" data-i18n-aria="rail.1" aria-label="Manifesto"></button>
+      <button type="button" data-target="2" data-i18n-aria="rail.2" aria-label="Model"></button>
+      <button type="button" data-target="3" data-i18n-aria="rail.3" aria-label="The units"></button>
+      <button type="button" data-target="4" data-i18n-aria="rail.4" aria-label="Sunergies"></button>
+      <button type="button" data-target="5" data-i18n-aria="rail.5" aria-label="Contact"></button>
+    </nav>
+
+    <div id="exp-overlays" aria-hidden="true">
+      <div class="exp-block" id="ov-hero">
+        <div class="inner">
+          <div class="exp-hero-lockup">
+            <img class="exp-hero-mark" src="assets/logo.svg" alt="" width="96" height="58" />
+            <div class="exp-hero-word">RFS</div>
+            <div class="exp-hero-tag" data-i18n="hero.tag">HOLDING GROUP</div>
+          </div>
+          <h2 data-i18n="hero.h1">Building the future of energy.</h2>
+          <p data-i18n="hero.sub">Long-horizon governance for an integrated energy ecosystem in Brazil.</p>
+        </div>
+        <div class="exp-scroll-cue"><span data-i18n="hero.cue">Scroll</span><i aria-hidden="true"></i></div>
+      </div>
+      <div class="exp-block" id="ov-manifesto">
+        <div class="inner">
+          <p class="exp-lines">
+            <span data-i18n="man.l1">One holding.</span><br />
+            <span data-i18n="man.l2">An <em>ecosystem</em> of energy.</span><br />
+            <span data-i18n="man.l3">Built to operate for <em>decades</em>, not quarters.</span>
+          </p>
+          <p data-i18n="man.p">RFS is the holding company behind Sunergies Group.</p>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-model-0">
+        <div class="inner">
+          <div class="exp-layer-name">RFS</div>
+          <span class="exp-role" data-i18n="model.rfs.role">Long-horizon governance</span>
+          <p data-i18n="model.rfs.p">Sets the group's direction, capital allocation and portfolio strategy across every company.</p>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-model-1">
+        <div class="inner">
+          <div class="exp-layer-name">SUNERGIES GROUP</div>
+          <span class="exp-role" data-i18n="model.sun.role">Integrated operating platform</span>
+          <p data-i18n="model.sun.p">Coordinates commercial, financial and operational execution across the ecosystem.</p>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-model-2">
+        <div class="inner">
+          <div class="exp-layer-name" data-i18n="model.units.name">ECOSYSTEM COMPANIES</div>
+          <span class="exp-role" data-i18n="model.units.role">Specialized teams, market by market</span>
+          <p data-i18n="model.units.p">Ten focused businesses, each led by its own team, operating with autonomy inside the group's model.</p>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-eco-intro">
+        <div class="inner">
+          <h2 data-i18n="eco.h2">The ecosystem</h2>
+          <p data-i18n="eco.intro">RFS governs ten Sunergies Group companies. Ten specialized teams, one energy ecosystem.</p>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-flagship">
+        <div class="inner">
+          <h2 data-i18n="flag.h2">Flagship: Sunergies</h2>
+          <p data-i18n="flag.p">Since 2014, Sunergies has structured and executed solar projects end-to-end.</p>
+          <div class="exp-flag-stats">
+            <div class="exp-stat">
+              <span class="exp-stat-num">2014</span>
+              <span class="exp-stat-label" data-i18n="flag.s1l">founded</span>
+            </div>
+            <div class="exp-stat">
+              <span class="exp-stat-num">500+ MW</span>
+              <span class="exp-stat-label" data-i18n="flag.s2l">structured</span>
+            </div>
+            <div class="exp-stat">
+              <span class="exp-stat-num" data-i18n="flag.s3n">End-to-end</span>
+              <span class="exp-stat-label" data-i18n="flag.s3l">full lifecycle</span>
+            </div>
+          </div>
+          <a class="exp-cta" href="https://sunergies.com.br" target="_blank" rel="noopener" tabindex="-1" data-i18n="flag.cta">Visit sunergies.com.br →</a>
+        </div>
+      </div>
+      <div class="exp-block" id="ov-contact">
+        <div class="inner">
+          <h2 data-i18n="con.h2">Open a conversation</h2>
+          <p data-i18n="con.p">For investment, partnership, institutional or press inquiries, reach the group through its official contact channel.</p>
+          <a class="exp-cta" href="https://sunergies.com.br/#contato" target="_blank" rel="noopener" tabindex="-1" data-i18n="con.cta">Contact the group ↗</a>
+          <div class="exp-foot" data-i18n="foot.line">RFS Grupo Holding — Brasil · © 2026</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const I18N = {
+        en: {
+          "a11y.skip": "Skip to content",
+          "a11y.nav": "Primary navigation",
+          "a11y.language": "Language",
+          "nav.manifesto": "Manifesto",
+          "nav.model": "Model",
+          "nav.ecosystem": "Ecosystem",
+          "nav.flagship": "Sunergies",
+          "nav.contact": "Contact",
+          "hero.tag": "HOLDING GROUP",
+          "hero.h1": "Building the future of energy.",
+          "hero.sub": "Long-horizon governance for an integrated energy ecosystem in Brazil.",
+          "hero.cue": "Scroll",
+          "exp.enter": "ENTER THE ECOSYSTEM",
+          "man.l1": "One holding.",
+          "man.l2": "An <em>ecosystem</em> of energy.",
+          "man.l3": "Built to operate for <em>decades</em>, not quarters.",
+          "man.p": "RFS is the holding company behind Sunergies Group and its ecosystem — a single governance structure over independent businesses spanning generation, government and corporate energy deals, alternative mobility, digital energy assets, media and R&D. Each company operates with its own team and market focus; RFS sets the direction, capital discipline and time horizon.",
+          "model.h2": "How the group works",
+          "model.intro": "Clear roles turn a broad portfolio into one operating system.",
+          "model.thesis": "One strategic center. One operating platform. Multiple routes to market.",
+          "model.rfs.role": "Long-horizon governance",
+          "model.rfs.p": "Sets the group's direction, capital allocation and portfolio strategy across every company.",
+          "model.sun.role": "Integrated operating platform",
+          "model.sun.p": "Coordinates commercial, financial and operational execution across the ecosystem, including shared services and cross-company synergy.",
+          "model.units.name": "ECOSYSTEM COMPANIES",
+          "model.units.role": "Specialized teams, market by market",
+          "model.units.p": "Ten focused businesses, each led by its own team, operating with autonomy inside the group's model.",
+          "eco.h2": "The ecosystem",
+          "eco.intro": "RFS governs ten Sunergies Group companies. Ten specialized teams, one energy ecosystem.",
+          "tag.usinas": "Generation", "tag.sungov": "Government", "tag.sunnews": "Media",
+          "tag.suncashback": "Benefits", "tag.sunlife": "Health", "tag.sunpower": "Corporate",
+          "tag.sunsquad": "Partners", "tag.sunchargers": "Mobility", "tag.sundex": "Digital", "tag.pdi": "Innovation",
+          "desc.usinas": "Develops and holds power-generation assets — the base layer of the ecosystem.",
+          "desc.sungov": "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.",
+          "desc.sunnews": "News, blog, internal communications and podcast — the voice of the ecosystem.",
+          "desc.suncashback": "Cashback, benefits and incentives that can convert into discounts or new investments.",
+          "desc.sunlife": "Health plans, telemedicine and medical services for the group's network.",
+          "desc.sunpower": "Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.",
+          "desc.sunsquad": "The group's partner-development arm, connecting its network, referral programs and mentorship.",
+          "desc.sunchargers": "An EV-charging network and convenience concept integrated with clean energy.",
+          "desc.sundex": "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.",
+          "desc.pdi": "Research, development, education and carbon-credit initiatives for the energy transition.",
+          "sub.usinas.1": "Global investment funds",
+          "sub.sungov.1": "PPAs", "sub.sungov.2": "Distributed generation", "sub.sungov.3": "Own plants", "sub.sungov.4": "Energy efficiency",
+          "sub.sunnews.1": "News", "sub.sunnews.2": "Blog", "sub.sunnews.3": "Internal marketing", "sub.sunnews.4": "Podcast",
+          "sub.suncashback.1": "Cashback & benefits", "sub.suncashback.2": "New-contract incentives", "sub.suncashback.3": "Conversion into discounts or new investments",
+          "sub.sunlife.1": "Health plan", "sub.sunlife.2": "Telemedicine", "sub.sunlife.3": "Medical services", "sub.sunlife.4": "Sustainability & social responsibility",
+          "sub.sunpower.1": "PPAs", "sub.sunpower.2": "Distributed generation", "sub.sunpower.3": "Own plants",
+          "sub.sunsquad.1": "Partner & ambassador network", "sub.sunsquad.2": "Referral programs", "sub.sunsquad.3": "Mentoring & specialized teams",
+          "sub.sunchargers.1": "EV-charging network", "sub.sunchargers.2": "Convenience store (concept)", "sub.sunchargers.3": "Clean-energy integration",
+          "sub.sundex.1": "Tokenized solar plants", "sub.sundex.2": "Fractional tokens", "sub.sundex.3": "Blockchain", "sub.sundex.4": "Liquidity & democratized investment",
+          "sub.pdi.1": "Research & development", "sub.pdi.2": "Energy innovation", "sub.pdi.3": "In-person courses & efficiency", "sub.pdi.4": "Carbon credits",
+          "flag.h2": "Flagship: Sunergies",
+          "flag.p": "Since 2014, Sunergies has structured and executed solar projects end-to-end — modeling, execution, grid approval and operation — with more than 500 MW across Brazil.",
+          "flag.s1l": "founded", "flag.s2l": "structured", "flag.s3n": "End-to-end", "flag.s3l": "full lifecycle",
+          "flag.cta": "Visit sunergies.com.br →",
+          "con.h2": "Open a conversation",
+          "con.p": "For investment, partnership, institutional or press inquiries, reach the group through its official contact channel.",
+          "con.cta": "Contact the group ↗",
+          "foot.line": "RFS Grupo Holding — Brasil · © 2026",
+          "rail.0": "Start", "rail.1": "Manifesto", "rail.2": "Model",
+          "rail.3": "The units", "rail.4": "Sunergies", "rail.5": "Contact",
+          "wm.eco": "ECOSYSTEM",
+        },
+        pt: {
+          "a11y.skip": "Ir para o conteúdo",
+          "a11y.nav": "Navegação principal",
+          "a11y.language": "Idioma",
+          "nav.manifesto": "Manifesto",
+          "nav.model": "Modelo",
+          "nav.ecosystem": "Ecossistema",
+          "nav.flagship": "Sunergies",
+          "nav.contact": "Contato",
+          "hero.tag": "GRUPO HOLDING",
+          "hero.h1": "Construindo o futuro da energia.",
+          "hero.sub": "Governança de longo prazo para um ecossistema integrado de energia no Brasil.",
+          "hero.cue": "Role",
+          "exp.enter": "ENTRAR NO ECOSSISTEMA",
+          "man.l1": "Uma holding.",
+          "man.l2": "Um <em>ecossistema</em> de energia.",
+          "man.l3": "Construído para operar por <em>décadas</em>, não trimestres.",
+          "man.p": "A RFS é a holding por trás do Grupo Sunergies e de seu ecossistema — uma única estrutura de governança sobre negócios independentes que vão de geração de energia a negócios governamentais e corporativos, mobilidade alternativa, ativos digitais de energia, mídia e P&D. Cada empresa opera com equipe e foco de mercado próprios; a RFS define a direção, a disciplina de capital e o horizonte de tempo.",
+          "model.h2": "Como o grupo funciona",
+          "model.intro": "Papéis claros transformam um portfólio amplo em um único sistema operacional.",
+          "model.thesis": "Um centro estratégico. Uma plataforma operacional. Múltiplas rotas para o mercado.",
+          "model.rfs.role": "Governança de longo prazo",
+          "model.rfs.p": "Define a direção, a alocação de capital e a estratégia de portfólio de todas as empresas.",
+          "model.sun.role": "Plataforma operacional integrada",
+          "model.sun.p": "Coordena a execução comercial, financeira e operacional do ecossistema, incluindo serviços compartilhados e sinergia entre empresas.",
+          "model.units.name": "EMPRESAS DO ECOSSISTEMA",
+          "model.units.role": "Equipes especializadas, mercado a mercado",
+          "model.units.p": "Dez negócios focados, cada um liderado por sua própria equipe, operando com autonomia dentro do modelo do grupo.",
+          "eco.h2": "O ecossistema",
+          "eco.intro": "A RFS governa dez empresas do Grupo Sunergies. Dez equipes especializadas, um ecossistema de energia.",
+          "tag.usinas": "Geração", "tag.sungov": "Governo", "tag.sunnews": "Mídia",
+          "tag.suncashback": "Benefícios", "tag.sunlife": "Saúde", "tag.sunpower": "Corporativo",
+          "tag.sunsquad": "Parceiros", "tag.sunchargers": "Mobilidade", "tag.sundex": "Digital", "tag.pdi": "Inovação",
+          "desc.usinas": "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema.",
+          "desc.sungov": "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público.",
+          "desc.sunnews": "Notícias, blog, endomarketing e podcast — a voz do ecossistema.",
+          "desc.suncashback": "Cashback, benefícios e incentivos que podem ser convertidos em descontos ou novos investimentos.",
+          "desc.sunlife": "Plano de saúde, telemedicina e serviços médicos para a rede do grupo.",
+          "desc.sunpower": "Soluções de energia limpa de longo prazo para clientes corporativos, de PPAs a usinas próprias.",
+          "desc.sunsquad": "A frente de desenvolvimento de parceiros do grupo, conectando rede, indicações e mentoria.",
+          "desc.sunchargers": "Rede de eletropostos e conceito de conveniência integrados à energia limpa.",
+          "desc.sundex": "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez.",
+          "desc.pdi": "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética.",
+          "sub.usinas.1": "Fundos globais de investimento",
+          "sub.sungov.1": "PPAs", "sub.sungov.2": "Geração distribuída", "sub.sungov.3": "Usinas próprias", "sub.sungov.4": "Eficiência energética",
+          "sub.sunnews.1": "Notícias", "sub.sunnews.2": "Blog", "sub.sunnews.3": "Endomarketing", "sub.sunnews.4": "Podcast",
+          "sub.suncashback.1": "Cashback e benefícios", "sub.suncashback.2": "Incentivo a novas contratações", "sub.suncashback.3": "Conversão em descontos ou novos investimentos",
+          "sub.sunlife.1": "Plano de saúde", "sub.sunlife.2": "Telemedicina", "sub.sunlife.3": "Serviços médicos", "sub.sunlife.4": "Sustentabilidade e responsabilidade social",
+          "sub.sunpower.1": "PPAs", "sub.sunpower.2": "Geração distribuída", "sub.sunpower.3": "Usinas próprias",
+          "sub.sunsquad.1": "Rede de parceiros e embaixadores", "sub.sunsquad.2": "Programas de indicação", "sub.sunsquad.3": "Mentoria e times especializados",
+          "sub.sunchargers.1": "Rede de eletropostos", "sub.sunchargers.2": "Loja de conveniência (conceito)", "sub.sunchargers.3": "Integração com energia limpa",
+          "sub.sundex.1": "Usinas solares tokenizadas", "sub.sundex.2": "Tokens fracionados", "sub.sundex.3": "Blockchain", "sub.sundex.4": "Liquidez e democratização do investimento",
+          "sub.pdi.1": "Pesquisa e desenvolvimento", "sub.pdi.2": "Inovação energética", "sub.pdi.3": "Cursos presenciais e eficiência", "sub.pdi.4": "Crédito de carbono",
+          "flag.h2": "Carro-chefe: Sunergies",
+          "flag.p": "Desde 2014, a Sunergies estrutura e executa projetos solares de ponta a ponta — modelagem, execução, homologação e operação — com mais de 500 MW pelo Brasil.",
+          "flag.s1l": "fundação", "flag.s2l": "estruturados", "flag.s3n": "Ponta a ponta", "flag.s3l": "ciclo completo",
+          "flag.cta": "Visitar sunergies.com.br →",
+          "con.h2": "Abra uma conversa",
+          "con.p": "Para investimento, parceria, assuntos institucionais ou imprensa, fale com o grupo por seu canal oficial de contato.",
+          "con.cta": "Contatar o grupo ↗",
+          "foot.line": "RFS Grupo Holding — Brasil · © 2026",
+          "rail.0": "Início", "rail.1": "Manifesto", "rail.2": "Modelo",
+          "rail.3": "As unidades", "rail.4": "Sunergies", "rail.5": "Contato",
+          "wm.eco": "ECOSSISTEMA",
+        },
+      };
+
+      function applyLang(lang) {
+        document.documentElement.lang = lang;
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.dataset.i18n;
+          if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+        });
+        document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+          const key = el.dataset.i18nAria;
+          if (I18N[lang][key] !== undefined) el.setAttribute("aria-label", I18N[lang][key]);
+        });
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          btn.classList.toggle("is-active", btn.dataset.lang === lang);
+          btn.setAttribute("aria-pressed", btn.dataset.lang === lang ? "true" : "false");
+        });
+        document.title =
+          lang === "pt" ? "RFS Grupo Holding" : "RFS Holding Group";
+        document.querySelector('meta[name="description"]').content = lang === "pt"
+          ? "A RFS é a holding de longo prazo por trás do Sunergies Group e de um ecossistema diversificado de energia no Brasil."
+          : "RFS is the long-horizon holding company behind Sunergies Group and a diversified energy ecosystem in Brazil.";
+        localStorage.setItem("rfs-lang", lang);
+      }
+
+      const mainEl = document.getElementById("main");
+      document.querySelectorAll(".lang-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const lang = btn.dataset.lang;
+          mainEl.classList.add("lang-fade");
+          setTimeout(() => {
+            applyLang(lang);
+            mainEl.classList.remove("lang-fade");
+          }, 180);
+        });
+      });
+
+      applyLang(localStorage.getItem("rfs-lang") || "en");
+
+      const header = document.getElementById("header");
+      window.addEventListener("scroll", () => {
+        header.classList.toggle("is-scrolled", window.scrollY > 40);
+      });
+
+      // Unit expand/collapse — one open at a time
+      document.querySelectorAll(".unit-row").forEach((btn) => {
+        const detail = btn.nextElementSibling;
+        const detailId = `unit-detail-${btn.closest(".unit").dataset.unit}`;
+        detail.id = detailId;
+        btn.setAttribute("aria-controls", detailId);
+        btn.addEventListener("click", () => {
+          const unit = btn.closest(".unit");
+          const wasOpen = unit.dataset.open === "true";
+          document.querySelectorAll(".unit").forEach((u) => {
+            u.dataset.open = "false";
+            u.querySelector(".unit-row").setAttribute("aria-expanded", "false");
+          });
+          if (!wasOpen) {
+            unit.dataset.open = "true";
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+
+      // Dotted Brazil map — simplified silhouette clip + dot grid
+      (function buildMap() {
+        const svg = document.getElementById("eco-map-svg");
+        const NS = "http://www.w3.org/2000/svg";
+        const defs = document.createElementNS(NS, "defs");
+        const clip = document.createElementNS(NS, "clipPath");
+        clip.setAttribute("id", "brazil-clip");
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute(
+          "d",
+          "M130,8 C190,4 250,18 288,55 C324,90 342,135 338,185 C334,235 352,270 344,315 C336,358 304,388 268,410 C236,430 210,452 176,450 C144,448 128,422 108,402 C82,376 58,352 48,316 C36,276 44,232 40,190 C36,148 56,110 78,78 C96,52 100,26 130,8 Z"
+        );
+        clip.appendChild(path);
+        defs.appendChild(clip);
+        svg.appendChild(defs);
+
+        const g = document.createElementNS(NS, "g");
+        g.setAttribute("clip-path", "url(#brazil-clip)");
+        const pitch = 14;
+        const dots = [];
+        for (let y = 0; y <= 460; y += pitch) {
+          for (let x = 0; x <= 400; x += pitch) {
+            const c = document.createElementNS(NS, "circle");
+            c.setAttribute("cx", x);
+            c.setAttribute("cy", y);
+            c.setAttribute("r", 1.6);
+            g.appendChild(c);
+            dots.push(c);
+          }
+        }
+        svg.appendChild(g);
+
+        const pulseCount = Math.min(8, dots.length);
+        const used = new Set();
+        for (let i = 0; i < pulseCount; i++) {
+          let idx;
+          do { idx = Math.floor(Math.random() * dots.length); } while (used.has(idx));
+          used.add(idx);
+          const c = dots[idx];
+          c.classList.add("pulse");
+          c.style.animationDelay = (i * 0.6) + "s";
+        }
+      })();
+
+      // Scroll reveals via IntersectionObserver
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            if (entry.target.classList.contains("manifesto-lines")) {
+              entry.target.querySelectorAll("span").forEach((s, i) => {
+                s.style.animationDelay = i * 0.15 + "s";
+                s.classList.add("reveal");
+              });
+            } else {
+              entry.target.classList.add("reveal");
+            }
+            io.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(document.querySelector(".manifesto-lines"));
+      io.observe(document.querySelector(".model-layers"));
+      io.observe(document.querySelector(".eco-diagram"));
+      io.observe(document.querySelector(".flag-wipe"));
+      io.observe(document.querySelector(".flag-stats"));
+
+      // Stat count-up, once
+      const statIo = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.querySelectorAll(".stat-num").forEach((el) => {
+              const target = parseInt(el.dataset.count, 10);
+              const suffix = el.dataset.suffix || "";
+              const duration = 1200;
+              const start = performance.now();
+              function tick(now) {
+                const p = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(target * eased) + suffix;
+                if (p < 1) requestAnimationFrame(tick);
+              }
+              requestAnimationFrame(tick);
+            });
+            statIo.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.5 }
+      );
+      statIo.observe(document.querySelector(".flag-stats"));
+
+      // Keep the current section visible in the desktop navigation.
+      const navLinks = [...document.querySelectorAll(".site-nav a")];
+      const navSections = navLinks
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+      const navIo = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach((link) => {
+              const isCurrent = link.getAttribute("href") === `#${entry.target.id}`;
+              if (isCurrent) link.setAttribute("aria-current", "page");
+              else link.removeAttribute("aria-current");
+            });
+          });
+        },
+        { rootMargin: "-35% 0px -55% 0px" }
+      );
+      navSections.forEach((section) => navIo.observe(section));
+
+      // Hero entrance timeline (once, on load)
+      function playEntrance() {
+        const horizon = document.querySelector(".horizon-line");
+        const dome = document.querySelector(".hero-mark");
+        const word = document.querySelector(".hero-word");
+        const tag = document.querySelector(".hero-tag");
+        const h1 = document.querySelector(".hero h1");
+        const sub = document.querySelector(".hero-sub");
+        const hdr = document.getElementById("header");
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          [dome, word, tag, h1, sub, hdr, horizon].forEach((el) => el && el.classList.add("reveal"));
+          dome.classList.add("shimmer");
+          return;
+        }
+        horizon.classList.add("reveal");
+        setTimeout(() => dome.classList.add("reveal", "shimmer"), 500);
+        setTimeout(() => word.classList.add("reveal"), 1300);
+        setTimeout(() => tag.classList.add("reveal"), 1380);
+        setTimeout(() => h1.classList.add("reveal"), 1500);
+        setTimeout(() => sub.classList.add("reveal"), 1620);
+        setTimeout(() => hdr.classList.add("reveal"), 1900);
+      }
+      window.addEventListener("load", playEntrance);
+
+      // ============ v2 experience engine ("The Crossing") ============
+      (function () {
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const narrow = window.innerWidth < 360;
+        const forceExperience = new URLSearchParams(window.location.search).get("experience") === "1";
+        const canvas = document.getElementById("scene");
+        if ((!forceExperience && (reducedMotion || narrow)) || !canvas.getContext) return;
+
+        document.documentElement.classList.add("experience");
+
+        const ctx = canvas.getContext("2d");
+        const bgA = document.getElementById("bg-a");
+        const bgB = document.getElementById("bg-b");
+        const wmText = document.getElementById("watermark-text");
+        const expHeader = document.getElementById("exp-header");
+        const rail = document.getElementById("rail");
+        const railButtons = [...rail.querySelectorAll("button")];
+        const overlaysRoot = document.getElementById("exp-overlays");
+        const experienceIntro = document.getElementById("experience-intro");
+        const enterExperienceButton = document.getElementById("enter-experience");
+
+        window.scrollTo(0, 0);
+        function enterExperience(event) {
+          if (document.documentElement.classList.contains("experience-entered")) return;
+          document.documentElement.classList.add("experience-entered");
+          experienceIntro.classList.add("is-entered");
+          experienceIntro.setAttribute("aria-hidden", "true");
+          enterExperienceButton.setAttribute("tabindex", "-1");
+          document.querySelectorAll("#exp-header .lang-btn, #exp-overlays .exp-cta").forEach((control) => {
+            control.setAttribute("tabindex", "0");
+          });
+          if (event && event.detail === 0) railButtons[0].focus();
+          else enterExperienceButton.blur();
+          window.setTimeout(() => { experienceIntro.style.display = "none"; }, 780);
+        }
+        enterExperienceButton.addEventListener("click", enterExperience);
+        window.setTimeout(() => enterExperienceButton.focus(), 120);
+
+        const TOTAL_DEPTH = 9000;
+        const FOCAL = 420;
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+        const rand = (a, b) => a + Math.random() * (b - a);
+        function smoothstep(e0, e1, x) {
+          const t = clamp((x - e0) / (e1 - e0), 0, 1);
+          return t * t * (3 - 2 * t);
+        }
+        function envelope(p, inStart, inEnd, outStart, outEnd) {
+          if (p <= inStart || p >= outEnd) return 0;
+          if (p < inEnd) return smoothstep(inStart, inEnd, p);
+          if (p > outStart) return 1 - smoothstep(outStart, outEnd, p);
+          return 1;
+        }
+
+        // ---- particle field ----
+        const isMobile = window.innerWidth < 880;
+        const FIELD_N = isMobile ? 220 : 450;
+        const field = [];
+        for (let i = 0; i < FIELD_N; i++) {
+          field.push({
+            x: rand(-600, 600),
+            y: rand(-340, 340),
+            z: rand(0, TOTAL_DEPTH),
+            r: rand(0.5, 2.5),
+            a: rand(0.15, 0.9),
+            phase: rand(0, Math.PI * 2),
+            driftX: rand(5, 28),
+            driftY: rand(4, 18),
+            twinkle: rand(0.6, 1.8),
+          });
+        }
+        const MAX_DIST2 = 170 * 170;
+        const edges = [];
+        for (let i = 0; i < field.length; i++) {
+          let links = 0;
+          for (let j = i + 1; j < field.length; j++) {
+            const dx = field[i].x - field[j].x,
+              dy = field[i].y - field[j].y,
+              dz = field[i].z - field[j].z;
+            if (dx * dx + dy * dy + dz * dz < MAX_DIST2) {
+              edges.push([i, j]);
+              links += 1;
+              if (links === 2) break;
+            }
+          }
+        }
+
+        // ---- unit nodes (the ten business units flight stations) ----
+        const UNIT_ORDER = ["usinas","sungov","sunnews","suncashback","sunlife","sunpower","sunsquad","sunchargers","sundex","pdi"];
+        const UNIT_NAME = {
+          usinas: "Usinas de Investimento", sungov: "SunGov Deals", sunnews: "Sun News",
+          suncashback: "SunCashback", sunlife: "SunLife", sunpower: "SunPower Deals",
+          sunsquad: "SunSquad", sunchargers: "SunChargers", sundex: "Sundex", pdi: "P&DI",
+        };
+        const UNIT_SIDE = ["left","right","left","right","left","right","left","right","left","right"];
+        const UNIT_Y = [-70, 55, -40, 70, -55, 35, -65, 50, -35, 65];
+        const STATION_START = 0.40;
+        const STATION_WIDTH = 0.36;
+        const HOLD_OFFSET = 150;
+        const STATION_STEP = STATION_WIDTH / 10;
+
+        const unitNodes = UNIT_ORDER.map((key, i) => {
+          const center = STATION_START + (i + 0.5) * STATION_STEP;
+          return {
+            index: i,
+            key,
+            side: UNIT_SIDE[i],
+            x: (UNIT_SIDE[i] === "left" ? -1 : 1) * (isMobile ? 40 : 112) + rand(-10, 10),
+            y: UNIT_Y[i],
+            z: center * TOTAL_DEPTH + HOLD_OFFSET,
+            center,
+            inStart: center - 0.014,
+            inEnd: center - 0.004,
+            outStart: center + 0.010,
+            outEnd: center + 0.020,
+          };
+        });
+
+        // Build the DOM cards for each unit
+        unitNodes.forEach((node) => {
+          const card = document.createElement("div");
+          card.className = "unit-card side-" + node.side;
+          card.innerHTML =
+            '<span class="uc-name">' + UNIT_NAME[node.key] +
+            '</span><span class="uc-tag" data-i18n="tag.' + node.key + '"></span>' +
+            '<p class="uc-desc" data-i18n="desc.' + node.key + '"></p>';
+          overlaysRoot.appendChild(card);
+          node.card = card;
+        });
+
+        // ---- background chapter gradients (pure cross-dissolve, no color lerp) ----
+        const BG_STOPS = [
+          { at: 0.0, css: "linear-gradient(180deg, oklch(6% .01 270), var(--black-deep))" },
+          { at: 0.19, css: "linear-gradient(180deg, var(--black-deep), var(--black))" },
+          { at: 0.76, css: "linear-gradient(180deg, var(--gold-hot), var(--gold))" },
+          { at: 0.90, css: "linear-gradient(180deg, var(--black), oklch(5% .008 60))" },
+        ];
+        function updateBg(p) {
+          let idx = 0;
+          for (let i = 0; i < BG_STOPS.length; i++) if (p >= BG_STOPS[i].at) idx = i;
+          const cur = BG_STOPS[idx];
+          const next = BG_STOPS[idx + 1];
+          bgA.style.background = cur.css;
+          if (!next) {
+            bgB.style.opacity = 0;
+            return;
+          }
+          const win = 0.03;
+          const t = clamp((p - (next.at - win)) / win, 0, 1);
+          bgB.style.background = next.css;
+          bgB.style.opacity = t;
+        }
+
+        // ---- watermark text (pure function of progress) ----
+        function watermarkTextFor(p) {
+          if (p < 0.075) return "";
+          if (p < 0.19) return "RFS";
+          if (p < 0.35) return "SUNERGIES";
+          if (p < 0.40) return I18N[currentLang()]["wm.eco"] || "ECOSYSTEM";
+          if (p < 0.76) {
+            const idx = clamp(Math.floor((p - STATION_START) / STATION_STEP), 0, 9);
+            return UNIT_NAME[UNIT_ORDER[idx]].toUpperCase();
+          }
+          if (p < 0.785) return "SUNERGIES";
+          if (p < 0.83) return "2014";
+          if (p < 0.90) return "500+ MW";
+          return "RFS";
+        }
+        function currentLang() {
+          return document.documentElement.lang === "pt" ? "pt" : "en";
+        }
+
+        // ---- overlay chapter envelopes ----
+        const ovHero = document.getElementById("ov-hero");
+        const ovManifesto = document.getElementById("ov-manifesto");
+        const ovModel = [
+          document.getElementById("ov-model-0"),
+          document.getElementById("ov-model-1"),
+          document.getElementById("ov-model-2"),
+        ];
+        const ovEcoIntro = document.getElementById("ov-eco-intro");
+        const ovFlagship = document.getElementById("ov-flagship");
+        const ovContact = document.getElementById("ov-contact");
+
+        function setOpacity(el, v) {
+          el.style.opacity = v;
+          el.style.pointerEvents = v > 0.4 ? "auto" : "none";
+          const inner = el.firstElementChild;
+          if (inner) {
+            inner.style.transform = "translate3d(0," + ((1 - v) * 22) + "px,0) scale(" + (0.985 + v * 0.015) + ")";
+            inner.style.filter = "blur(" + ((1 - v) * 5) + "px)";
+          }
+        }
+
+        // ---- resize / canvas sizing ----
+        let cw = window.innerWidth, ch = window.innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+        function resize() {
+          cw = window.innerWidth;
+          ch = window.innerHeight;
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = cw * dpr;
+          canvas.height = ch * dpr;
+          canvas.style.width = cw + "px";
+          canvas.style.height = ch + "px";
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener("resize", resize);
+
+        // ---- resolved colors (read once; canvas fillStyle accepts oklch() in Chromium) ----
+        const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        const COLOR_GOLD = cssVar("--gold") || "#d4af37";
+        const COLOR_INK = cssVar("--ink-on-gold") || "#1a1712";
+        const GOLD_RGB = "212,175,55";
+        const INK_RGB = "26,23,18";
+
+        const pointer = { targetX: 0, targetY: 0, x: 0, y: 0 };
+        window.addEventListener("pointermove", (event) => {
+          pointer.targetX = clamp((event.clientX / Math.max(cw, 1) - 0.5) * 2, -1, 1);
+          pointer.targetY = clamp((event.clientY / Math.max(ch, 1) - 0.5) * 2, -1, 1);
+        }, { passive: true });
+        document.documentElement.addEventListener("mouseleave", () => {
+          pointer.targetX = 0;
+          pointer.targetY = 0;
+        });
+
+        function project(x, y, z, camZ) {
+          const rel = z - camZ;
+          if (rel <= 1) return null;
+          const scale = FOCAL / rel;
+          const depth = clamp(1 - rel / TOTAL_DEPTH, 0, 1);
+          return {
+            sx: cw / 2 + x * scale + pointer.x * (10 + depth * 24),
+            sy: ch / 2 + y * scale + pointer.y * (7 + depth * 16),
+            scale,
+            rel,
+          };
+        }
+
+        function projectParticle(particle, camZ, time) {
+          let rel = (particle.z - camZ + TOTAL_DEPTH) % TOTAL_DEPTH;
+          if (rel < 24) rel += TOTAL_DEPTH;
+          const scale = FOCAL / rel;
+          const seconds = time * 0.001;
+          const x = particle.x + Math.sin(seconds * 0.16 + particle.phase) * particle.driftX;
+          const y = particle.y + Math.cos(seconds * 0.13 + particle.phase) * particle.driftY;
+          const depth = clamp(1 - rel / TOTAL_DEPTH, 0, 1);
+          return {
+            sx: cw / 2 + x * scale + pointer.x * (8 + depth * 28),
+            sy: ch / 2 + y * scale + pointer.y * (5 + depth * 18),
+            scale,
+            rel,
+            depth,
+          };
+        }
+
+        function drawSolarPlane(cx, cy, width, height, rotation, alpha, rgb, time, seed) {
+          const seconds = time * 0.001;
+          const floatY = Math.sin(seconds * 0.22 + seed) * 7;
+          const points = [
+            [-width * 0.50, -height * 0.45],
+            [ width * 0.50, -height * 0.26],
+            [ width * 0.44,  height * 0.46],
+            [-width * 0.46,  height * 0.28],
+          ];
+          const lerpPoint = (a, b, amount) => [
+            a[0] + (b[0] - a[0]) * amount,
+            a[1] + (b[1] - a[1]) * amount,
+          ];
+
+          ctx.save();
+          ctx.translate(cx, cy + floatY);
+          ctx.rotate(rotation + Math.sin(seconds * 0.08 + seed) * 0.012);
+
+          ctx.fillStyle = "rgba(" + rgb + "," + alpha + ")";
+          ctx.beginPath();
+          ctx.moveTo(points[0][0], points[0][1]);
+          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle = "rgba(" + rgb + "," + (alpha * 0.48) + ")";
+          ctx.beginPath();
+          ctx.moveTo(points[0][0], points[0][1]);
+          ctx.lineTo(points[1][0], points[1][1]);
+          ctx.lineTo(points[2][0], points[2][1]);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(" + rgb + "," + Math.min(alpha * 2.8, 0.48) + ")";
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(points[0][0], points[0][1]);
+          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+          ctx.closePath();
+          ctx.stroke();
+
+          for (let column = 1; column < 6; column++) {
+            const amount = column / 6;
+            const top = lerpPoint(points[0], points[1], amount);
+            const bottom = lerpPoint(points[3], points[2], amount);
+            ctx.beginPath();
+            ctx.moveTo(top[0], top[1]);
+            ctx.lineTo(bottom[0], bottom[1]);
+            ctx.stroke();
+          }
+          for (let row = 1; row < 4; row++) {
+            const amount = row / 4;
+            const left = lerpPoint(points[0], points[3], amount);
+            const right = lerpPoint(points[1], points[2], amount);
+            ctx.beginPath();
+            ctx.moveTo(left[0], left[1]);
+            ctx.lineTo(right[0], right[1]);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        function drawSolarWorld(p, time, inGold) {
+          const hero = 1 - smoothstep(0.045, 0.105, p);
+          const manifesto = envelope(p, 0.07, 0.10, 0.17, 0.20);
+          const units = envelope(p, 0.36, 0.40, 0.73, 0.77);
+          const flagship = envelope(p, 0.75, 0.78, 0.88, 0.91);
+          const rgb = inGold ? INK_RGB : GOLD_RGB;
+
+          if (hero > 0.01) {
+            drawSolarPlane(
+              cw * 0.06 + pointer.x * 34,
+              ch * 0.63 + pointer.y * 18,
+              Math.max(cw * 0.40, 360),
+              Math.max(ch * 0.50, 300),
+              -0.25,
+              0.095 * hero,
+              rgb,
+              time,
+              0.4
+            );
+            drawSolarPlane(
+              cw * 0.94 + pointer.x * 24,
+              ch * 0.38 + pointer.y * 14,
+              Math.max(cw * 0.34, 320),
+              Math.max(ch * 0.42, 270),
+              0.28,
+              0.082 * hero,
+              rgb,
+              time,
+              2.1
+            );
+          }
+
+          if (manifesto > 0.01) {
+            drawSolarPlane(
+              cw * 0.83 + pointer.x * 26,
+              ch * 0.56,
+              Math.max(cw * 0.44, 420),
+              Math.max(ch * 0.58, 330),
+              0.16,
+              0.07 * manifesto,
+              rgb,
+              time,
+              3.4
+            );
+          }
+
+          if (units > 0.01) {
+            const travel = ((p - 0.36) / 0.41) * Math.PI * 2;
+            drawSolarPlane(
+              cw * (0.10 + Math.sin(travel) * 0.025),
+              ch * 0.72,
+              Math.max(cw * 0.30, 280),
+              Math.max(ch * 0.40, 250),
+              -0.18,
+              0.055 * units,
+              rgb,
+              time,
+              4.7
+            );
+            drawSolarPlane(
+              cw * (0.91 + Math.cos(travel) * 0.02),
+              ch * 0.28,
+              Math.max(cw * 0.26, 260),
+              Math.max(ch * 0.34, 230),
+              0.22,
+              0.045 * units,
+              rgb,
+              time,
+              6.2
+            );
+          }
+
+          if (flagship > 0.01) {
+            drawSolarPlane(
+              cw * 0.87,
+              ch * 0.56,
+              Math.max(cw * 0.48, 460),
+              Math.max(ch * 0.62, 360),
+              0.12,
+              0.055 * flagship,
+              rgb,
+              time,
+              7.8
+            );
+          }
+        }
+
+        function drawSolarEnvironment(p, time, inGold) {
+          const seconds = time * 0.001;
+          const rgb = inGold ? INK_RGB : GOLD_RGB;
+          const heroStrength = 1 - smoothstep(0.035, 0.095, p);
+          const modelStrength = envelope(p, 0.18, 0.21, 0.34, 0.38);
+          const arrivalStrength = smoothstep(0.90, 0.95, p);
+
+          ctx.save();
+          ctx.globalCompositeOperation = inGold ? "source-over" : "lighter";
+          drawSolarWorld(p, time, inGold);
+
+          if (heroStrength > 0.01) {
+            const sunX = cw * 0.5 + pointer.x * 24;
+            const sunY = ch * 0.43 + pointer.y * 14;
+            const sunR = Math.min(cw, ch) * (0.26 + Math.sin(seconds * 0.35) * 0.008);
+            const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR);
+            halo.addColorStop(0, "rgba(" + GOLD_RGB + "," + (0.13 * heroStrength) + ")");
+            halo.addColorStop(0.36, "rgba(" + GOLD_RGB + "," + (0.055 * heroStrength) + ")");
+            halo.addColorStop(1, "rgba(" + GOLD_RGB + ",0)");
+            ctx.fillStyle = halo;
+            ctx.fillRect(0, 0, cw, ch);
+
+            ctx.strokeStyle = "rgba(" + GOLD_RGB + "," + (0.16 * heroStrength) + ")";
+            ctx.lineWidth = 1;
+            for (let ring = 0; ring < 3; ring++) {
+              const radius = sunR * (0.46 + ring * 0.23) + Math.sin(seconds * 0.45 + ring) * 5;
+              ctx.beginPath();
+              ctx.arc(sunX, sunY, radius, -0.18 * Math.PI, 1.18 * Math.PI);
+              ctx.stroke();
+            }
+          }
+
+          const currentAlpha = (inGold ? 0.085 : 0.11) * (0.72 + Math.sin(seconds * 0.22) * 0.12);
+          const currentGradient = ctx.createLinearGradient(0, 0, cw, 0);
+          currentGradient.addColorStop(0, "rgba(" + rgb + ",0)");
+          currentGradient.addColorStop(0.2, "rgba(" + rgb + "," + currentAlpha + ")");
+          currentGradient.addColorStop(0.8, "rgba(" + rgb + "," + currentAlpha + ")");
+          currentGradient.addColorStop(1, "rgba(" + rgb + ",0)");
+          ctx.strokeStyle = currentGradient;
+          for (let current = 0; current < 4; current++) {
+            const baseY = ch * (0.40 + current * 0.105) - p * ch * 0.08;
+            ctx.lineWidth = current === 1 ? 1.4 : 0.7;
+            ctx.beginPath();
+            for (let x = -24; x <= cw + 24; x += 18) {
+              const y = baseY
+                + Math.sin(x * 0.007 + seconds * (0.22 + current * 0.025) + current * 1.7) * (12 + current * 5)
+                + Math.sin(x * 0.0026 - seconds * 0.14 + p * 9) * 15;
+              if (x === -24) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+
+          if (modelStrength > 0.01) {
+            ctx.strokeStyle = "rgba(" + GOLD_RGB + "," + (0.18 * modelStrength) + ")";
+            ctx.lineWidth = 1;
+            for (let orbit = 0; orbit < 3; orbit++) {
+              ctx.beginPath();
+              ctx.ellipse(
+                cw / 2 + pointer.x * 22,
+                ch / 2 + pointer.y * 14,
+                Math.min(cw * 0.31, 420) + orbit * 38,
+                Math.min(ch * 0.13, 105) + orbit * 14,
+                seconds * (0.025 + orbit * 0.01),
+                0,
+                Math.PI * 2
+              );
+              ctx.stroke();
+            }
+          }
+
+          if (arrivalStrength > 0.01) {
+            const horizonY = ch * 0.72 + Math.sin(seconds * 0.3) * 3;
+            const horizon = ctx.createLinearGradient(0, 0, cw, 0);
+            horizon.addColorStop(0, "rgba(" + GOLD_RGB + ",0)");
+            horizon.addColorStop(0.5, "rgba(" + GOLD_RGB + "," + (0.34 * arrivalStrength) + ")");
+            horizon.addColorStop(1, "rgba(" + GOLD_RGB + ",0)");
+            ctx.strokeStyle = horizon;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, horizonY);
+            ctx.lineTo(cw, horizonY);
+            ctx.stroke();
+          }
+
+          ctx.restore();
+        }
+
+        // ---- rail wiring ----
+        const RAIL_TARGETS = [0.02, 0.13, 0.27, 0.55, 0.82, 0.97];
+        railButtons.forEach((btn, i) => {
+          btn.addEventListener("click", () => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            window.scrollTo({ top: RAIL_TARGETS[i] * max, behavior: "smooth" });
+          });
+        });
+        function railBucket(p) {
+          if (p < 0.075) return 0;
+          if (p < 0.19) return 1;
+          if (p < 0.35) return 2;
+          if (p < 0.76) return 3;
+          if (p < 0.90) return 4;
+          return 5;
+        }
+
+        // ---- main loop ----
+        let smoothProgress = 0;
+        function loop(time) {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          const raw = max > 0 ? clamp(window.scrollY / max, 0, 1) : 0;
+          smoothProgress += (raw - smoothProgress) * 0.08;
+          pointer.x += (pointer.targetX - pointer.x) * 0.045;
+          pointer.y += (pointer.targetY - pointer.y) * 0.045;
+          const p = smoothProgress;
+          const camZ = p * TOTAL_DEPTH;
+          const inGold = p > 0.76 && p < 0.90;
+
+          updateBg(p);
+          document.documentElement.classList.toggle("gold-chapter", inGold);
+
+          const wt = watermarkTextFor(p);
+          wmText.textContent = wt;
+          wmText.parentElement.style.opacity = wt ? 1 : 0;
+          wmText.style.transform = "translate3d(" + (-pointer.x * 16) + "px," + (-pointer.y * 10) + "px,0)";
+          overlaysRoot.style.setProperty("--journey", p);
+
+          expHeader.style.opacity = smoothstep(0.05, 0.09, p);
+
+          const bucket = railBucket(p);
+          railButtons.forEach((b, i) => b.classList.toggle("active", i === bucket));
+
+          setOpacity(ovHero, 1 - smoothstep(0.055, 0.085, p));
+          setOpacity(ovManifesto, envelope(p, 0.075, 0.10, 0.165, 0.19));
+          setOpacity(ovModel[0], envelope(p, 0.195, 0.215, 0.235, 0.25));
+          setOpacity(ovModel[1], envelope(p, 0.25, 0.27, 0.29, 0.305));
+          setOpacity(ovModel[2], envelope(p, 0.305, 0.325, 0.345, 0.36));
+          setOpacity(ovEcoIntro, envelope(p, 0.35, 0.365, 0.385, 0.40));
+          setOpacity(ovFlagship, envelope(p, 0.765, 0.785, 0.885, 0.90));
+          setOpacity(ovContact, smoothstep(0.905, 0.925, p));
+
+          ctx.clearRect(0, 0, cw, ch);
+          drawSolarEnvironment(p, time, inGold);
+
+          // field particles
+          const sceneRGB = inGold ? INK_RGB : GOLD_RGB;
+          const sceneColor = inGold ? COLOR_INK : COLOR_GOLD;
+          const projected = field.map((particle) => projectParticle(particle, camZ, time));
+          ctx.lineWidth = 0.5;
+          for (const [i, j] of edges) {
+            const a = projected[i];
+            const b = projected[j];
+            if (!a || !b) continue;
+            const screenDistance = Math.hypot(a.sx - b.sx, a.sy - b.sy);
+            if (screenDistance > 190 || Math.abs(a.rel - b.rel) > 220) continue;
+            ctx.strokeStyle = sceneColor;
+            ctx.globalAlpha = 0.055 + Math.min(a.depth, b.depth) * 0.12;
+            ctx.beginPath();
+            ctx.moveTo(a.sx, a.sy);
+            ctx.lineTo(b.sx, b.sy);
+            ctx.stroke();
+          }
+          for (let i = 0; i < field.length; i++) {
+            const particle = field[i];
+            const proj = projected[i];
+            if (proj.sx < -30 || proj.sx > cw + 30 || proj.sy < -30 || proj.sy > ch + 30) continue;
+            const pulse = 0.62 + Math.sin(time * 0.001 * particle.twinkle + particle.phase) * 0.32;
+            const radius = clamp(particle.r * (0.62 + proj.scale * 5.5), 0.45, 5.5);
+            ctx.globalAlpha = particle.a * pulse * (0.28 + proj.depth * 0.9);
+            ctx.fillStyle = sceneColor;
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            if (radius > 1.8) {
+              ctx.strokeStyle = "rgba(" + sceneRGB + ",.2)";
+              ctx.lineWidth = 0.7;
+              ctx.beginPath();
+              ctx.arc(proj.sx, proj.sy, radius * 2.4, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+          }
+          ctx.globalAlpha = 1;
+
+          // unit nodes: marker, leader line, DOM card position
+          unitNodes.forEach((node) => {
+            const e = envelope(p, node.inStart, node.inEnd, node.outStart, node.outEnd);
+            const proj = project(node.x, node.y, node.z, camZ);
+            if (!proj || e <= 0.01) {
+              node.card.style.opacity = 0;
+              return;
+            }
+            const pulse = 0.9 + Math.sin(time * 0.004 + node.index * 0.8) * 0.1;
+            const radius = clamp(4 * proj.scale, 3, 22) * pulse;
+            const grad = ctx.createRadialGradient(proj.sx, proj.sy, 0, proj.sx, proj.sy, radius * 2.4);
+            grad.addColorStop(0, COLOR_GOLD);
+            grad.addColorStop(1, "transparent");
+            ctx.globalAlpha = e;
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, radius * 2.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = COLOR_GOLD;
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, Math.max(2, radius * 0.5), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = COLOR_GOLD;
+            ctx.globalAlpha = e * 0.38;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(proj.sx, proj.sy, radius * (1.8 + Math.sin(time * 0.002 + node.index) * 0.2), 0, Math.PI * 2);
+            ctx.stroke();
+
+            const cardW = isMobile ? 240 : 300;
+            let anchorX, cardY, lineEndX, lineEndY;
+            if (isMobile) {
+              anchorX = (cw - cardW) / 2;
+              cardY = clamp(proj.sy - 175, 118, ch - 220);
+              lineEndX = cw / 2;
+              lineEndY = cardY + 120;
+            } else {
+              if (node.side === "left") {
+                anchorX = clamp(proj.sx - 30 - cardW, 24, cw - 24 - cardW);
+              } else {
+                anchorX = clamp(proj.sx + 30, 24, cw - 24 - cardW);
+              }
+              lineEndX = node.side === "left" ? anchorX + cardW : anchorX;
+              lineEndY = clamp(proj.sy, 90, ch - 90);
+              cardY = lineEndY - 40;
+            }
+
+            ctx.strokeStyle = COLOR_GOLD;
+            ctx.globalAlpha = e * 0.6;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(proj.sx, proj.sy);
+            ctx.lineTo(lineEndX, lineEndY);
+            ctx.stroke();
+            const flow = (time * 0.00022 + node.index * 0.13) % 1;
+            ctx.globalAlpha = e * 0.9;
+            ctx.fillStyle = COLOR_GOLD;
+            ctx.beginPath();
+            ctx.arc(proj.sx + (lineEndX - proj.sx) * flow, proj.sy + (lineEndY - proj.sy) * flow, 1.6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+
+            const cardFloat = Math.sin(time * 0.0014 + node.index) * 3;
+            node.card.style.transform = "translate(" + anchorX + "px, " + (cardY + cardFloat) + "px)";
+            node.card.style.opacity = e;
+          });
+
+          requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+
+        // Re-apply language to the freshly created unit cards
+        applyLang(localStorage.getItem("rfs-lang") || "en");
+      })();
+    </script>
+  </body>
+</html>

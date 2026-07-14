@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFS Grupo Holding</title>
+    <meta
+      name="description"
+      content="RFS is the long-horizon holding company behind Sunergies Group and a diversified energy ecosystem in Brazil."
+    />
+    <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --black: oklch(12% 0.008 90);
+        --black-deep: oklch(8% 0.006 90);
+        --surface: oklch(16% 0.012 92);
+        --line: oklch(30% 0.025 95);
+        --text: oklch(93% 0.012 95);
+        --muted: oklch(70% 0.02 95);
+        --gold: #d4af37;
+        --gold-hot: oklch(85% 0.115 98);
+        --gold-deep: oklch(58% 0.1 92);
+        --ink-on-gold: oklch(14% 0.01 90);
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --z-header: 40;
+        --z-toggle: 50;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 76px;
+      }
+
+      body {
+        margin: 0;
+        background: var(--black);
+        color: var(--text);
+        font-family: "Archivo", system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.65;
+        overflow-x: hidden;
+      }
+
+      ::selection {
+        background: var(--gold);
+        color: var(--ink-on-gold);
+      }
+
+      .skip-link {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: calc(var(--z-toggle) + 1);
+        padding: 0.65rem 0.9rem;
+        background: var(--gold);
+        color: var(--ink-on-gold);
+        font-weight: 700;
+        text-decoration: none;
+        transform: translateY(-160%);
+      }
+      .skip-link:focus { transform: translateY(0); }
+
+      :focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 4px;
+      }
+
+      .site-header {
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: var(--z-header);
+        background: transparent;
+      }
+      .site-header.is-scrolled {
+        background: var(--black-deep);
+        border-bottom: 1px solid var(--line);
+      }
+      .header-inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 1.1rem clamp(1.25rem, 4vw, 3rem);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: var(--text);
+        margin-right: auto;
+      }
+      .brand-name {
+        font-weight: 900;
+        font-stretch: 125%;
+        letter-spacing: -0.01em;
+        font-size: 1.05rem;
+      }
+      .site-nav {
+        display: flex;
+        gap: 1.75rem;
+      }
+      .site-nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        position: relative;
+      }
+      .site-nav a::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -4px;
+        width: 100%;
+        height: 1px;
+        background: var(--gold);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s var(--ease);
+      }
+      .site-nav a:hover {
+        color: var(--text);
+      }
+      .site-nav a:hover::after,
+      .site-nav a[aria-current="page"]::after {
+        transform: scaleX(1);
+      }
+      .site-nav a[aria-current="page"] { color: var(--text); }
+
+      .lang-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      .lang-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 0.25rem;
+        font: inherit;
+        font-weight: inherit;
+      }
+      .lang-btn.is-active {
+        color: var(--gold);
+      }
+      .lang-sep {
+        color: var(--line);
+      }
+      .hero {
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: var(--black-deep);
+        overflow: hidden;
+        padding: 6rem 1.5rem;
+      }
+      .hero-glow {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 60%;
+        background: radial-gradient(
+          ellipse at bottom,
+          var(--gold-deep) 0%,
+          transparent 70%
+        );
+        opacity: 0.08;
+        pointer-events: none;
+      }
+      .horizon-line {
+        position: absolute;
+        left: 50%;
+        top: 78%;
+        width: min(900px, 90vw);
+        height: 1px;
+        background: var(--gold);
+        transform: translateX(-50%) scaleX(0);
+        transform-origin: center;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+      }
+      .hero-mark {
+        width: clamp(120px, 18vw, 180px);
+        height: auto;
+        margin-bottom: 0.5rem;
+      }
+      .hero-word {
+        font-weight: 900;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(4rem, 10vw, 5.9rem);
+        line-height: 1;
+        color: var(--gold);
+      }
+      .hero-tag {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        color: var(--muted);
+        margin-bottom: 1.5rem;
+      }
+      .hero h1 {
+        font-weight: 850;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(2.8rem, 7vw, 5.25rem);
+        line-height: 1.05;
+        margin: 0;
+        text-wrap: balance;
+        max-width: 16ch;
+      }
+      .hero-sub {
+        color: var(--muted);
+        font-size: 1.15rem;
+        margin: 0.5rem 0 2.5rem;
+      }
+
+      .scroll-cue {
+        width: 1px;
+        height: 32px;
+        background: var(--gold);
+        margin: 0 auto;
+      }
+      @keyframes cue-pulse {
+        0%, 100% { opacity: .3; transform: scaleY(1); }
+        50% { opacity: 1; transform: scaleY(1.4); }
+      }
+      .scroll-cue { animation: cue-pulse 2.2s var(--ease) infinite; transform-origin: top; }
+
+      /* Manifesto */
+      .manifesto {
+        background: var(--black);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .manifesto-inner { max-width: 900px; margin: 0 auto; }
+      .manifesto-lines {
+        font-weight: 800;
+        font-stretch: 125%;
+        letter-spacing: -0.02em;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        line-height: 1.25;
+        margin: 0 0 2.5rem;
+        text-wrap: balance;
+      }
+      .manifesto-lines em { font-style: normal; color: var(--gold); }
+      .manifesto-p { color: var(--muted); font-size: 1.05rem; max-width: 62ch; line-height: 1.65; }
+      .manifesto-lines span { display: inline-block; opacity: 0; transform: translateY(28px); }
+      .manifesto-lines span.reveal {
+        animation: line-up .7s var(--ease) forwards;
+      }
+      @keyframes line-up { to { opacity: 1; transform: translateY(0); } }
+
+      /* Operating model */
+      .operating-model {
+        background: var(--black);
+        border-top: 1px solid var(--line);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .model-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: minmax(240px, .75fr) minmax(0, 1.35fr);
+        gap: clamp(3rem, 8vw, 8rem);
+        align-items: start;
+      }
+      .model-copy {
+        position: sticky;
+        top: 8.5rem;
+      }
+      .model-copy h2 {
+        margin: 0 0 1.25rem;
+        max-width: 10ch;
+        font-size: clamp(2.2rem, 5vw, 3.5rem);
+        font-stretch: 125%;
+        font-weight: 850;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        text-wrap: balance;
+      }
+      .model-intro {
+        margin: 0 0 2rem;
+        max-width: 34ch;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+      .model-thesis {
+        margin: 0;
+        max-width: 26ch;
+        color: var(--gold);
+        font-weight: 700;
+        line-height: 1.45;
+      }
+      .model-layers {
+        position: relative;
+        padding-left: 2rem;
+      }
+      .model-layers::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        background: var(--gold);
+        opacity: .65;
+      }
+      .model-layer {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(150px, .7fr) minmax(0, 1.3fr);
+        gap: clamp(1.5rem, 4vw, 3rem);
+        padding: 2rem 0;
+        border-top: 1px solid var(--line);
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      .model-layer:last-child { border-bottom: 1px solid var(--line); }
+      .model-layer::before {
+        content: "";
+        position: absolute;
+        top: 2.5rem;
+        left: calc(-2rem - 4px);
+        width: 9px;
+        height: 9px;
+        background: var(--gold);
+        transform: rotate(45deg);
+      }
+      .layer-name {
+        color: var(--text);
+        font-size: 1rem;
+        font-stretch: 125%;
+        font-weight: 850;
+        letter-spacing: .08em;
+        line-height: 1.3;
+      }
+      .layer-role {
+        display: block;
+        margin-bottom: .5rem;
+        color: var(--gold);
+        font-weight: 700;
+      }
+      .layer-detail p {
+        margin: 0;
+        max-width: 48ch;
+        color: var(--muted);
+      }
+      .model-layers.reveal .model-layer { animation: word-up .65s var(--ease) forwards; }
+      .model-layers.reveal .model-layer:nth-child(2) { animation-delay: .12s; }
+      .model-layers.reveal .model-layer:nth-child(3) { animation-delay: .24s; }
+
+      /* Ecosystem */
+      .ecosystem {
+        position: relative;
+        background: var(--black-deep);
+        padding: clamp(5rem, 14vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+        overflow: hidden;
+      }
+      .eco-map {
+        position: absolute;
+        right: -4%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: min(46%, 480px);
+        opacity: .9;
+        pointer-events: none;
+      }
+      .eco-map svg { width: 100%; height: auto; display: block; }
+      .eco-map circle { fill: var(--gold); opacity: .1; }
+      .eco-map circle.pulse { animation: dot-pulse 4s ease-in-out infinite; }
+      @keyframes dot-pulse { 0%, 100% { opacity: .1; } 50% { opacity: .6; } }
+      .eco-inner { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; }
+      .ecosystem h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2.2rem, 5vw, 3.4rem); margin: 0 0 1rem;
+      }
+      .eco-intro { color: var(--muted); max-width: 56ch; font-size: 1.05rem; margin: 0 0 3.5rem; }
+
+      .eco-diagram { display: flex; flex-direction: column; align-items: center; }
+      .tier {
+        display: flex; align-items: center; gap: .5rem;
+        border: 1px solid var(--gold); border-radius: 3px;
+        padding: .6rem 1.2rem; background: var(--black-deep);
+        font-weight: 800; font-stretch: 125%; letter-spacing: .04em;
+        color: var(--gold); font-size: .95rem; z-index: 2;
+      }
+      .tier-sunergies { letter-spacing: .18em; font-size: .85rem; margin-top: 1.75rem; }
+      .bus { width: 2px; background: var(--gold); }
+      .bus-top { height: 1.75rem; }
+      .bus-main { height: 2.5rem; }
+
+      .eco-columns {
+        display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3.5rem, 6vw, 6rem);
+        width: 100%; margin-top: -1px; position: relative;
+      }
+      .eco-columns::before {
+        content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+        width: 2px; background: var(--gold); transform: translateX(-50%);
+      }
+      .eco-col { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1.6rem; }
+      .eco-col-left { align-items: flex-end; text-align: right; }
+      .eco-col-right { align-items: flex-start; text-align: left; }
+
+      .unit { position: relative; width: 100%; max-width: 380px; }
+      .eco-col-left .unit { margin-left: auto; }
+      .unit-row {
+        background: none; border: none; color: inherit; font: inherit; cursor: pointer;
+        display: flex; align-items: baseline; gap: .6rem; width: 100%; padding: .3rem 0;
+      }
+      .eco-col-left .unit-row { justify-content: flex-end; }
+      .eco-col-right .unit-row { justify-content: flex-start; }
+      .unit-name {
+        font-weight: 700; letter-spacing: .04em; font-size: .95rem; color: var(--text);
+        transition: color .2s var(--ease);
+      }
+      .unit-row:hover .unit-name, .unit-row:focus-visible .unit-name { color: var(--gold); }
+      .unit-row::after {
+        content: "+";
+        color: var(--gold);
+        font-size: 1rem;
+        font-weight: 500;
+        line-height: 1;
+      }
+      .unit-row[aria-expanded="true"]::after { content: "−"; }
+      .unit-tag { font-size: .72rem; color: var(--muted); letter-spacing: .05em; white-space: nowrap; }
+      .unit-detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s var(--ease); }
+      .unit-detail ul { overflow: hidden; list-style: none; margin: 0; padding: 0; }
+      .unit[data-open="true"] .unit-detail { grid-template-rows: 1fr; }
+      .unit-detail li {
+        font-size: .82rem; color: var(--muted); padding: .25rem 0; line-height: 1.5;
+      }
+      .unit-detail .unit-summary {
+        padding-top: .7rem;
+        padding-bottom: .65rem;
+        color: var(--text);
+        font-size: .9rem;
+        line-height: 1.55;
+        text-wrap: pretty;
+      }
+      .eco-col-left .unit-detail li { padding-right: 1rem; }
+      .eco-col-right .unit-detail li:not(.unit-summary)::before { content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-right: 8px; vertical-align: middle; }
+      .eco-col-left .unit-detail li:not(.unit-summary)::after { content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-left: 8px; vertical-align: middle; }
+      .unit::before, .unit::after { content: ""; position: absolute; top: 13px; }
+      .unit::before { width: 12px; height: 1px; background: var(--gold); }
+      .unit::after {
+        width: 7px; height: 7px; border: 1.5px solid var(--gold);
+        background: var(--black-deep); transform: translateY(-3px);
+      }
+      .eco-col-left .unit::before { right: -12px; }
+      .eco-col-left .unit::after { right: -22px; }
+      .eco-col-right .unit::before { left: -12px; }
+      .eco-col-right .unit::after { left: -22px; }
+
+      @media (max-width: 879px) {
+        .site-nav { display: none; }
+        .header-inner { padding: 1rem 1.25rem; }
+        .eco-map { width: 60%; opacity: .5; }
+        .eco-columns { grid-template-columns: 1fr; padding-left: 34px; gap: 1.6rem; }
+        .eco-columns::before { left: 10px; }
+        .eco-col-left, .eco-col-right { align-items: flex-start; text-align: left; }
+        .eco-col-left .unit, .eco-col-right .unit { margin-left: 0; }
+        .eco-col-left .unit-row, .eco-col-right .unit-row { justify-content: flex-start; }
+        .eco-col-left .unit-detail li:not(.unit-summary)::after,
+        .eco-col-right .unit-detail li:not(.unit-summary)::before {
+          content: ""; display: inline-block; width: 10px; height: 1px; background: var(--gold); margin-right: 8px;
+        }
+        .eco-col-left .unit-detail li::before { content: none; }
+        .eco-col-left .unit-detail li { padding-right: 0; }
+        .eco-col-left .unit::before, .eco-col-right .unit::before { left: -22px; right: auto; }
+        .eco-col-left .unit::after, .eco-col-right .unit::after { left: -34px; right: auto; }
+      }
+
+      @media (max-width: 760px) {
+        .model-inner { grid-template-columns: 1fr; gap: 3rem; }
+        .model-copy { position: static; }
+        .model-copy h2 { max-width: 12ch; }
+        .model-intro, .model-thesis { max-width: 36ch; }
+        .model-layer { grid-template-columns: 1fr; gap: .75rem; }
+      }
+
+      /* Flagship gold band */
+      .flagship {
+        position: relative;
+        background: var(--gold);
+        color: var(--ink-on-gold);
+        padding: clamp(5rem, 14vh, 8rem) clamp(1.25rem, 4vw, 3rem);
+        overflow: hidden;
+      }
+      .flag-wipe {
+        position: absolute; inset: 0; background: var(--gold-hot);
+        transform-origin: left; transform: scaleX(0); opacity: 0;
+      }
+      .flag-wipe.reveal { animation: wipe-in .8s var(--ease) forwards; }
+      @keyframes wipe-in {
+        0% { transform: scaleX(0); opacity: 1; }
+        72% { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(1); opacity: 0; }
+      }
+      .flag-inner { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; }
+      .flagship h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2.2rem, 5vw, 3.2rem); margin: 0 0 1.25rem;
+      }
+      .flagship p { font-size: 1.1rem; max-width: 62ch; margin: 0 0 3rem; }
+      .flag-stats { display: flex; gap: clamp(1.5rem, 4vw, 3rem); margin-bottom: 3rem; flex-wrap: wrap; }
+      .stat { padding-right: clamp(1.5rem, 4vw, 3rem); border-right: 1px solid var(--ink-on-gold); }
+      .stat:last-child { border-right: none; }
+      .stat-num, .stat-static {
+        display: block; font-weight: 850; font-stretch: 125%;
+        font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em;
+      }
+      .stat-label { font-size: .78rem; letter-spacing: .08em; opacity: .75; }
+      .flag-cta {
+        display: inline-block; background: var(--ink-on-gold); color: var(--gold);
+        text-decoration: none; font-weight: 700; padding: .85rem 1.6rem; border-radius: 3px;
+        transition: transform .15s var(--ease);
+      }
+      .flag-cta:active { transform: scale(.98); }
+
+      /* Contact + footer */
+      .contact {
+        background: var(--black-deep);
+        text-align: center;
+        padding: clamp(5rem, 16vh, 9rem) clamp(1.25rem, 4vw, 3rem);
+      }
+      .contact h2 {
+        font-weight: 850; font-stretch: 125%; letter-spacing: -0.02em;
+        font-size: clamp(2rem, 5vw, 3rem); margin: 0 0 .75rem;
+      }
+      .contact p { color: var(--muted); margin: 0 0 2.25rem; }
+      .contact-cta {
+        display: inline-block; border: 1px solid var(--gold); color: var(--gold);
+        text-decoration: none; font-weight: 700; padding: .85rem 1.8rem; border-radius: 3px;
+        transition: transform .15s var(--ease), background .2s var(--ease), color .2s var(--ease);
+      }
+      .contact-cta:hover { background: var(--gold); color: var(--ink-on-gold); }
+      .contact-cta:active { transform: scale(.98); }
+
+      .site-footer { background: var(--black); border-top: 1px solid var(--line); }
+      .footer-inner {
+        max-width: 1240px; margin: 0 auto; padding: 1.5rem clamp(1.25rem, 4vw, 3rem);
+        display: flex; align-items: center; gap: 1rem; color: var(--muted); font-size: .85rem;
+      }
+      .footer-inner .lang-toggle { margin-left: auto; }
+
+      /* Hero entrance */
+      .hero-mark { position: relative; overflow: hidden; clip-path: inset(100% 0 0 0); }
+      .hero-mark.reveal { animation: dome-rise 1.1s var(--ease) forwards; }
+      @keyframes dome-rise { to { clip-path: inset(0 0 0 0); } }
+      .hero-mark::after {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(100deg, transparent 40%, oklch(100% 0 0 / .55) 50%, transparent 60%);
+        background-size: 220% 100%; background-position: 150% 0;
+      }
+      .hero-mark.shimmer::after { animation: shimmer-sweep 9s ease-in-out infinite; }
+      @keyframes shimmer-sweep { 0%, 88%, 100% { background-position: 150% 0; } 94% { background-position: -50% 0; } }
+
+      .hero-word, .hero-tag, .hero h1, .hero-sub {
+        opacity: 0; transform: translateY(24px);
+      }
+      .hero-word.reveal { animation: word-up .6s var(--ease) forwards; }
+      .hero-tag.reveal { animation: word-up .5s var(--ease) forwards; }
+      .hero h1.reveal { animation: word-up .6s var(--ease) forwards; }
+      .hero-sub.reveal { animation: word-up .5s var(--ease) forwards; }
+      @keyframes word-up { to { opacity: 1; transform: translateY(0); } }
+
+      .horizon-line.reveal { animation: horizon-draw .9s var(--ease) forwards; }
+      @keyframes horizon-draw { to { transform: translateX(-50%) scaleX(1); } }
+
+      .site-header { opacity: 0; }
+      .site-header.reveal { animation: word-up .5s var(--ease) forwards; }
+
+      /* Ecosystem reveal states */
+      .tier, .bus, .eco-columns::before { opacity: 0; }
+      .bus { transform: scaleY(0); transform-origin: top; }
+      .eco-diagram.reveal .tier { animation: word-up .5s var(--ease) forwards; }
+      .eco-diagram.reveal .tier-sunergies { animation-delay: .15s; }
+      .eco-diagram.reveal .bus { animation: bus-grow .5s var(--ease) forwards; animation-delay: .1s; }
+      @keyframes bus-grow { to { opacity: 1; transform: scaleY(1); } }
+      .eco-diagram.reveal .eco-columns::before { animation: bus-grow .6s var(--ease) forwards; animation-delay: .25s; }
+
+      .unit { opacity: 0; transform: translateY(16px); }
+      .eco-diagram.reveal .unit { animation: word-up .55s var(--ease) forwards; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(1) { animation-delay: .35s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(1) { animation-delay: .4s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(2) { animation-delay: .45s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(2) { animation-delay: .5s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(3) { animation-delay: .55s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(3) { animation-delay: .6s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(4) { animation-delay: .65s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(4) { animation-delay: .7s; }
+      .eco-diagram.reveal .eco-col-left .unit:nth-child(5) { animation-delay: .75s; }
+      .eco-diagram.reveal .eco-col-right .unit:nth-child(5) { animation-delay: .8s; }
+
+      .flag-stats .stat { opacity: 0; transform: translateY(12px); }
+      .flag-stats.reveal .stat { animation: word-up .5s var(--ease) forwards; }
+      .flag-stats.reveal .stat:nth-child(2) { animation-delay: .12s; }
+      .flag-stats.reveal .stat:nth-child(3) { animation-delay: .24s; }
+
+      #main { transition: none; }
+      #main:focus { outline: none; }
+      #main.lang-fade { animation: lang-crossfade .18s var(--ease); }
+      @keyframes lang-crossfade { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .scroll-cue, .eco-map circle.pulse, .flag-wipe, .hero-mark::after { animation: none !important; }
+        .manifesto-lines span,
+        .model-layer,
+        .hero-mark, .hero-word, .hero-tag, .hero h1, .hero-sub, .site-header,
+        .tier, .bus, .eco-columns::before, .unit, .flag-stats .stat,
+        .horizon-line {
+          opacity: 1 !important; transform: none !important; clip-path: none !important;
+        }
+        .flag-wipe { transform: scaleX(1); opacity: 0; }
+        html { scroll-behavior: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-i18n="a11y.skip">Skip to content</a>
+    <header class="site-header" id="header">
+      <div class="header-inner">
+        <a class="brand" href="#hero">
+          <img
+            class="mark"
+            src="assets/logo.svg"
+            alt=""
+            width="28"
+            height="17"
+          />
+          <span class="brand-name">RFS</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary navigation" data-i18n-aria="a11y.nav">
+          <a href="#manifesto" data-i18n="nav.manifesto">Manifesto</a>
+          <a href="#operating-model" data-i18n="nav.model">Model</a>
+          <a href="#ecosystem" data-i18n="nav.ecosystem">Ecosystem</a>
+          <a href="#flagship" data-i18n="nav.flagship">Sunergies</a>
+          <a href="#contact" data-i18n="nav.contact">Contact</a>
+        </nav>
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="a11y.language">
+          <button type="button" class="lang-btn is-active" data-lang="en">
+            EN
+          </button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" class="lang-btn" data-lang="pt">PT</button>
+        </div>
+      </div>
+    </header>
+    <section class="hero" id="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="horizon-line" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <img
+          class="hero-mark"
+          src="assets/logo.svg"
+          alt=""
+          width="180"
+          height="108"
+        />
+        <div class="hero-word">RFS</div>
+        <div class="hero-tag" data-i18n="hero.tag">HOLDING GROUP</div>
+        <h1 data-i18n="hero.h1">Building the future of energy.</h1>
+        <p class="hero-sub" data-i18n="hero.sub">Long-horizon governance for an integrated energy ecosystem in Brazil.</p>
+        <div class="scroll-cue" aria-hidden="true"></div>
+      </div>
+    </section>
+    <main id="main" tabindex="-1">
+      <section class="manifesto" id="manifesto">
+        <div class="manifesto-inner">
+          <p class="manifesto-lines">
+            <span data-i18n="man.l1">One holding.</span><br />
+            <span data-i18n="man.l2">An <em>ecosystem</em> of energy.</span><br />
+            <span data-i18n="man.l3">Built to operate for <em>decades</em>, not quarters.</span>
+          </p>
+          <p class="manifesto-p" data-i18n="man.p">
+            RFS is the holding company behind Sunergies Group and its ecosystem — a single
+            governance structure over independent businesses spanning generation,
+            government and corporate energy deals, alternative mobility, digital energy
+            assets, media and R&amp;D. Each company operates with its own team and market focus;
+            RFS sets the direction, capital discipline and time horizon.
+          </p>
+        </div>
+      </section>
+
+      <section class="operating-model" id="operating-model">
+        <div class="model-inner">
+          <div class="model-copy">
+            <h2 data-i18n="model.h2">How the group works</h2>
+            <p class="model-intro" data-i18n="model.intro">
+              Clear roles turn a broad portfolio into one operating system.
+            </p>
+            <p class="model-thesis" data-i18n="model.thesis">
+              One strategic center. One operating platform. Multiple routes to market.
+            </p>
+          </div>
+          <div class="model-layers">
+            <article class="model-layer">
+              <div class="layer-name">RFS</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.rfs.role">Long-horizon governance</span>
+                <p data-i18n="model.rfs.p">Sets the group's direction, capital allocation and portfolio strategy across every company.</p>
+              </div>
+            </article>
+            <article class="model-layer">
+              <div class="layer-name">SUNERGIES GROUP</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.sun.role">Integrated operating platform</span>
+                <p data-i18n="model.sun.p">Coordinates commercial, financial and operational execution across the ecosystem, including shared services and cross-company synergy.</p>
+              </div>
+            </article>
+            <article class="model-layer">
+              <div class="layer-name" data-i18n="model.units.name">ECOSYSTEM COMPANIES</div>
+              <div class="layer-detail">
+                <span class="layer-role" data-i18n="model.units.role">Specialized teams, market by market</span>
+                <p data-i18n="model.units.p">Ten focused businesses, each led by its own team, operating with autonomy inside the group's model.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="ecosystem" id="ecosystem">
+        <div class="eco-map" aria-hidden="true">
+          <svg viewBox="0 0 400 460" preserveAspectRatio="xMidYMid meet" id="eco-map-svg"></svg>
+        </div>
+        <div class="eco-inner">
+          <h2 data-i18n="eco.h2">The ecosystem</h2>
+          <p class="eco-intro" data-i18n="eco.intro">
+            RFS governs ten Sunergies Group companies. Ten specialized teams, one energy ecosystem.
+          </p>
+
+          <div class="eco-diagram">
+            <div class="tier tier-rfs">
+              <img src="assets/logo.svg" alt="" width="22" height="13" />
+              <span>RFS</span>
+            </div>
+            <div class="bus bus-top" aria-hidden="true"></div>
+            <div class="tier tier-sunergies">SUNERGIES GROUP</div>
+            <div class="bus bus-main" aria-hidden="true"></div>
+
+            <div class="eco-columns">
+              <ul class="eco-col eco-col-left">
+                <li class="unit" data-unit="usinas">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Usinas de Investimento</span>
+                    <span class="unit-tag" data-i18n="tag.usinas">Generation</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.usinas">Develops and holds power-generation assets — the base layer of the ecosystem.</li>
+                      <li data-i18n="sub.usinas.1">Global investment funds</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sungov">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunGov Deals</span>
+                    <span class="unit-tag" data-i18n="tag.sungov">Government</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sungov">PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.</li>
+                      <li data-i18n="sub.sungov.1">PPAs</li>
+                      <li data-i18n="sub.sungov.2">Distributed generation</li>
+                      <li data-i18n="sub.sungov.3">Own plants</li>
+                      <li data-i18n="sub.sungov.4">Energy efficiency</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunnews">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Sun News</span>
+                    <span class="unit-tag" data-i18n="tag.sunnews">Media</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunnews">News, blog, internal communications and podcast — the voice of the ecosystem.</li>
+                      <li data-i18n="sub.sunnews.1">News</li>
+                      <li data-i18n="sub.sunnews.2">Blog</li>
+                      <li data-i18n="sub.sunnews.3">Internal marketing</li>
+                      <li data-i18n="sub.sunnews.4">Podcast</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="suncashback">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunCashback</span>
+                    <span class="unit-tag" data-i18n="tag.suncashback">Benefits</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.suncashback">Cashback, benefits and incentives that can convert into discounts or new investments.</li>
+                      <li data-i18n="sub.suncashback.1">Cashback & benefits</li>
+                      <li data-i18n="sub.suncashback.2">New-contract incentives</li>
+                      <li data-i18n="sub.suncashback.3">Conversion into discounts or new investments</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunlife">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunLife</span>
+                    <span class="unit-tag" data-i18n="tag.sunlife">Health</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunlife">Health plans, telemedicine and medical services for the group's network.</li>
+                      <li data-i18n="sub.sunlife.1">Health plan</li>
+                      <li data-i18n="sub.sunlife.2">Telemedicine</li>
+                      <li data-i18n="sub.sunlife.3">Medical services</li>
+                      <li data-i18n="sub.sunlife.4">Sustainability & social responsibility</li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+
+              <ul class="eco-col eco-col-right">
+                <li class="unit" data-unit="sunpower">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunPower Deals</span>
+                    <span class="unit-tag" data-i18n="tag.sunpower">Corporate</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunpower">Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.</li>
+                      <li data-i18n="sub.sunpower.1">PPAs</li>
+                      <li data-i18n="sub.sunpower.2">Distributed generation</li>
+                      <li data-i18n="sub.sunpower.3">Own plants</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunsquad">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunSquad</span>
+                    <span class="unit-tag" data-i18n="tag.sunsquad">Partners</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunsquad">The group's partner-development arm, connecting its network, referral programs and mentorship.</li>
+                      <li data-i18n="sub.sunsquad.1">Partner & ambassador network</li>
+                      <li data-i18n="sub.sunsquad.2">Referral programs</li>
+                      <li data-i18n="sub.sunsquad.3">Mentoring & specialized teams</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sunchargers">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">SunChargers</span>
+                    <span class="unit-tag" data-i18n="tag.sunchargers">Mobility</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sunchargers">An EV-charging network and convenience concept integrated with clean energy.</li>
+                      <li data-i18n="sub.sunchargers.1">EV-charging network</li>
+                      <li data-i18n="sub.sunchargers.2">Convenience store (concept)</li>
+                      <li data-i18n="sub.sunchargers.3">Clean-energy integration</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="sundex">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">Sundex</span>
+                    <span class="unit-tag" data-i18n="tag.sundex">Digital</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.sundex">Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.</li>
+                      <li data-i18n="sub.sundex.1">Tokenized solar plants</li>
+                      <li data-i18n="sub.sundex.2">Fractional tokens</li>
+                      <li data-i18n="sub.sundex.3">Blockchain</li>
+                      <li data-i18n="sub.sundex.4">Liquidity & democratized investment</li>
+                    </ul>
+                  </div>
+                </li>
+                <li class="unit" data-unit="pdi">
+                  <button class="unit-row" aria-expanded="false">
+                    <span class="unit-name">P&amp;DI</span>
+                    <span class="unit-tag" data-i18n="tag.pdi">Innovation</span>
+                  </button>
+                  <div class="unit-detail">
+                    <ul>
+                      <li class="unit-summary" data-i18n="desc.pdi">Research, development, education and carbon-credit initiatives for the energy transition.</li>
+                      <li data-i18n="sub.pdi.1">Research & development</li>
+                      <li data-i18n="sub.pdi.2">Energy innovation</li>
+                      <li data-i18n="sub.pdi.3">In-person courses & efficiency</li>
+                      <li data-i18n="sub.pdi.4">Carbon credits</li>
+                    </ul>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="flagship" id="flagship">
+        <div class="flag-wipe" aria-hidden="true"></div>
+        <div class="flag-inner">
+          <h2 data-i18n="flag.h2">Flagship: Sunergies</h2>
+          <p data-i18n="flag.p">
+            Since 2014, Sunergies has structured and executed solar projects end-to-end —
+            modeling, execution, grid approval and operation — with more than 500 MW across
+            Brazil.
+          </p>
+          <div class="flag-stats">
+            <div class="stat">
+              <span class="stat-num" data-count="2014">0</span>
+              <span class="stat-label" data-i18n="flag.s1l">founded</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num" data-count="500" data-suffix="+ MW">0</span>
+              <span class="stat-label" data-i18n="flag.s2l">structured</span>
+            </div>
+            <div class="stat">
+              <span class="stat-static" data-i18n="flag.s3n">End-to-end</span>
+              <span class="stat-label" data-i18n="flag.s3l">full lifecycle</span>
+            </div>
+          </div>
+          <a class="flag-cta" href="https://sunergies.com.br" target="_blank" rel="noopener" data-i18n="flag.cta">
+            Visit sunergies.com.br →
+          </a>
+        </div>
+      </section>
+
+      <section class="contact" id="contact">
+        <div class="contact-inner">
+          <h2 data-i18n="con.h2">Open a conversation</h2>
+          <p data-i18n="con.p">For investment, partnership, institutional or press inquiries, reach the group through its official contact channel.</p>
+          <a class="contact-cta" href="https://sunergies.com.br/#contato" target="_blank" rel="noopener" data-i18n="con.cta">Contact the group ↗</a>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <img src="assets/logo.svg" alt="" width="20" height="12" />
+        <span data-i18n="foot.line">RFS Grupo Holding — Brasil · © 2026</span>
+        <div class="lang-toggle" role="group" aria-label="Language" data-i18n-aria="a11y.language">
+          <button type="button" class="lang-btn is-active" data-lang="en">EN</button>
+          <span class="lang-sep" aria-hidden="true">|</span>
+          <button type="button" class="lang-btn" data-lang="pt">PT</button>
+        </div>
+      </div>
+    </footer>
+    <script>
+      const I18N = {
+        en: {
+          "a11y.skip": "Skip to content",
+          "a11y.nav": "Primary navigation",
+          "a11y.language": "Language",
+          "nav.manifesto": "Manifesto",
+          "nav.model": "Model",
+          "nav.ecosystem": "Ecosystem",
+          "nav.flagship": "Sunergies",
+          "nav.contact": "Contact",
+          "hero.tag": "HOLDING GROUP",
+          "hero.h1": "Building the future of energy.",
+          "hero.sub": "Long-horizon governance for an integrated energy ecosystem in Brazil.",
+          "hero.cue": "Scroll",
+          "man.l1": "One holding.",
+          "man.l2": "An <em>ecosystem</em> of energy.",
+          "man.l3": "Built to operate for <em>decades</em>, not quarters.",
+          "man.p": "RFS is the holding company behind Sunergies Group and its ecosystem — a single governance structure over independent businesses spanning generation, government and corporate energy deals, alternative mobility, digital energy assets, media and R&D. Each company operates with its own team and market focus; RFS sets the direction, capital discipline and time horizon.",
+          "model.h2": "How the group works",
+          "model.intro": "Clear roles turn a broad portfolio into one operating system.",
+          "model.thesis": "One strategic center. One operating platform. Multiple routes to market.",
+          "model.rfs.role": "Long-horizon governance",
+          "model.rfs.p": "Sets the group's direction, capital allocation and portfolio strategy across every company.",
+          "model.sun.role": "Integrated operating platform",
+          "model.sun.p": "Coordinates commercial, financial and operational execution across the ecosystem, including shared services and cross-company synergy.",
+          "model.units.name": "ECOSYSTEM COMPANIES",
+          "model.units.role": "Specialized teams, market by market",
+          "model.units.p": "Ten focused businesses, each led by its own team, operating with autonomy inside the group's model.",
+          "eco.h2": "The ecosystem",
+          "eco.intro": "RFS governs ten Sunergies Group companies. Ten specialized teams, one energy ecosystem.",
+          "tag.usinas": "Generation", "tag.sungov": "Government", "tag.sunnews": "Media",
+          "tag.suncashback": "Benefits", "tag.sunlife": "Health", "tag.sunpower": "Corporate",
+          "tag.sunsquad": "Partners", "tag.sunchargers": "Mobility", "tag.sundex": "Digital", "tag.pdi": "Innovation",
+          "desc.usinas": "Develops and holds power-generation assets — the base layer of the ecosystem.",
+          "desc.sungov": "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.",
+          "desc.sunnews": "News, blog, internal communications and podcast — the voice of the ecosystem.",
+          "desc.suncashback": "Cashback, benefits and incentives that can convert into discounts or new investments.",
+          "desc.sunlife": "Health plans, telemedicine and medical services for the group's network.",
+          "desc.sunpower": "Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.",
+          "desc.sunsquad": "The group's partner-development arm, connecting its network, referral programs and mentorship.",
+          "desc.sunchargers": "An EV-charging network and convenience concept integrated with clean energy.",
+          "desc.sundex": "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.",
+          "desc.pdi": "Research, development, education and carbon-credit initiatives for the energy transition.",
+          "sub.usinas.1": "Global investment funds",
+          "sub.sungov.1": "PPAs", "sub.sungov.2": "Distributed generation", "sub.sungov.3": "Own plants", "sub.sungov.4": "Energy efficiency",
+          "sub.sunnews.1": "News", "sub.sunnews.2": "Blog", "sub.sunnews.3": "Internal marketing", "sub.sunnews.4": "Podcast",
+          "sub.suncashback.1": "Cashback & benefits", "sub.suncashback.2": "New-contract incentives", "sub.suncashback.3": "Conversion into discounts or new investments",
+          "sub.sunlife.1": "Health plan", "sub.sunlife.2": "Telemedicine", "sub.sunlife.3": "Medical services", "sub.sunlife.4": "Sustainability & social responsibility",
+          "sub.sunpower.1": "PPAs", "sub.sunpower.2": "Distributed generation", "sub.sunpower.3": "Own plants",
+          "sub.sunsquad.1": "Partner & ambassador network", "sub.sunsquad.2": "Referral programs", "sub.sunsquad.3": "Mentoring & specialized teams",
+          "sub.sunchargers.1": "EV-charging network", "sub.sunchargers.2": "Convenience store (concept)", "sub.sunchargers.3": "Clean-energy integration",
+          "sub.sundex.1": "Tokenized solar plants", "sub.sundex.2": "Fractional tokens", "sub.sundex.3": "Blockchain", "sub.sundex.4": "Liquidity & democratized investment",
+          "sub.pdi.1": "Research & development", "sub.pdi.2": "Energy innovation", "sub.pdi.3": "In-person courses & efficiency", "sub.pdi.4": "Carbon credits",
+          "flag.h2": "Flagship: Sunergies",
+          "flag.p": "Since 2014, Sunergies has structured and executed solar projects end-to-end — modeling, execution, grid approval and operation — with more than 500 MW across Brazil.",
+          "flag.s1l": "founded", "flag.s2l": "structured", "flag.s3n": "End-to-end", "flag.s3l": "full lifecycle",
+          "flag.cta": "Visit sunergies.com.br →",
+          "con.h2": "Open a conversation",
+          "con.p": "For investment, partnership, institutional or press inquiries, reach the group through its official contact channel.",
+          "con.cta": "Contact the group ↗",
+          "foot.line": "RFS Grupo Holding — Brasil · © 2026",
+        },
+        pt: {
+          "a11y.skip": "Ir para o conteúdo",
+          "a11y.nav": "Navegação principal",
+          "a11y.language": "Idioma",
+          "nav.manifesto": "Manifesto",
+          "nav.model": "Modelo",
+          "nav.ecosystem": "Ecossistema",
+          "nav.flagship": "Sunergies",
+          "nav.contact": "Contato",
+          "hero.tag": "GRUPO HOLDING",
+          "hero.h1": "Construindo o futuro da energia.",
+          "hero.sub": "Governança de longo prazo para um ecossistema integrado de energia no Brasil.",
+          "hero.cue": "Role",
+          "man.l1": "Uma holding.",
+          "man.l2": "Um <em>ecossistema</em> de energia.",
+          "man.l3": "Construído para operar por <em>décadas</em>, não trimestres.",
+          "man.p": "A RFS é a holding por trás do Grupo Sunergies e de seu ecossistema — uma única estrutura de governança sobre negócios independentes que vão de geração de energia a negócios governamentais e corporativos, mobilidade alternativa, ativos digitais de energia, mídia e P&D. Cada empresa opera com equipe e foco de mercado próprios; a RFS define a direção, a disciplina de capital e o horizonte de tempo.",
+          "model.h2": "Como o grupo funciona",
+          "model.intro": "Papéis claros transformam um portfólio amplo em um único sistema operacional.",
+          "model.thesis": "Um centro estratégico. Uma plataforma operacional. Múltiplas rotas para o mercado.",
+          "model.rfs.role": "Governança de longo prazo",
+          "model.rfs.p": "Define a direção, a alocação de capital e a estratégia de portfólio de todas as empresas.",
+          "model.sun.role": "Plataforma operacional integrada",
+          "model.sun.p": "Coordena a execução comercial, financeira e operacional do ecossistema, incluindo serviços compartilhados e sinergia entre empresas.",
+          "model.units.name": "EMPRESAS DO ECOSSISTEMA",
+          "model.units.role": "Equipes especializadas, mercado a mercado",
+          "model.units.p": "Dez negócios focados, cada um liderado por sua própria equipe, operando com autonomia dentro do modelo do grupo.",
+          "eco.h2": "O ecossistema",
+          "eco.intro": "A RFS governa dez empresas do Grupo Sunergies. Dez equipes especializadas, um ecossistema de energia.",
+          "tag.usinas": "Geração", "tag.sungov": "Governo", "tag.sunnews": "Mídia",
+          "tag.suncashback": "Benefícios", "tag.sunlife": "Saúde", "tag.sunpower": "Corporativo",
+          "tag.sunsquad": "Parceiros", "tag.sunchargers": "Mobilidade", "tag.sundex": "Digital", "tag.pdi": "Inovação",
+          "desc.usinas": "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema.",
+          "desc.sungov": "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público.",
+          "desc.sunnews": "Notícias, blog, endomarketing e podcast — a voz do ecossistema.",
+          "desc.suncashback": "Cashback, benefícios e incentivos que podem ser convertidos em descontos ou novos investimentos.",
+          "desc.sunlife": "Plano de saúde, telemedicina e serviços médicos para a rede do grupo.",
+          "desc.sunpower": "Soluções de energia limpa de longo prazo para clientes corporativos, de PPAs a usinas próprias.",
+          "desc.sunsquad": "A frente de desenvolvimento de parceiros do grupo, conectando rede, indicações e mentoria.",
+          "desc.sunchargers": "Rede de eletropostos e conceito de conveniência integrados à energia limpa.",
+          "desc.sundex": "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez.",
+          "desc.pdi": "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética.",
+          "sub.usinas.1": "Fundos globais de investimento",
+          "sub.sungov.1": "PPAs", "sub.sungov.2": "Geração distribuída", "sub.sungov.3": "Usinas próprias", "sub.sungov.4": "Eficiência energética",
+          "sub.sunnews.1": "Notícias", "sub.sunnews.2": "Blog", "sub.sunnews.3": "Endomarketing", "sub.sunnews.4": "Podcast",
+          "sub.suncashback.1": "Cashback e benefícios", "sub.suncashback.2": "Incentivo a novas contratações", "sub.suncashback.3": "Conversão em descontos ou novos investimentos",
+          "sub.sunlife.1": "Plano de saúde", "sub.sunlife.2": "Telemedicina", "sub.sunlife.3": "Serviços médicos", "sub.sunlife.4": "Sustentabilidade e responsabilidade social",
+          "sub.sunpower.1": "PPAs", "sub.sunpower.2": "Geração distribuída", "sub.sunpower.3": "Usinas próprias",
+          "sub.sunsquad.1": "Rede de parceiros e embaixadores", "sub.sunsquad.2": "Programas de indicação", "sub.sunsquad.3": "Mentoria e times especializados",
+          "sub.sunchargers.1": "Rede de eletropostos", "sub.sunchargers.2": "Loja de conveniência (conceito)", "sub.sunchargers.3": "Integração com energia limpa",
+          "sub.sundex.1": "Usinas solares tokenizadas", "sub.sundex.2": "Tokens fracionados", "sub.sundex.3": "Blockchain", "sub.sundex.4": "Liquidez e democratização do investimento",
+          "sub.pdi.1": "Pesquisa e desenvolvimento", "sub.pdi.2": "Inovação energética", "sub.pdi.3": "Cursos presenciais e eficiência", "sub.pdi.4": "Crédito de carbono",
+          "flag.h2": "Carro-chefe: Sunergies",
+          "flag.p": "Desde 2014, a Sunergies estrutura e executa projetos solares de ponta a ponta — modelagem, execução, homologação e operação — com mais de 500 MW pelo Brasil.",
+          "flag.s1l": "fundação", "flag.s2l": "estruturados", "flag.s3n": "Ponta a ponta", "flag.s3l": "ciclo completo",
+          "flag.cta": "Visitar sunergies.com.br →",
+          "con.h2": "Abra uma conversa",
+          "con.p": "Para investimento, parceria, assuntos institucionais ou imprensa, fale com o grupo por seu canal oficial de contato.",
+          "con.cta": "Contatar o grupo ↗",
+          "foot.line": "RFS Grupo Holding — Brasil · © 2026",
+        },
+      };
+
+      function applyLang(lang) {
+        document.documentElement.lang = lang;
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.dataset.i18n;
+          if (I18N[lang][key] !== undefined) el.innerHTML = I18N[lang][key];
+        });
+        document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
+          const key = el.dataset.i18nAria;
+          if (I18N[lang][key] !== undefined) el.setAttribute("aria-label", I18N[lang][key]);
+        });
+        document.querySelectorAll(".lang-btn").forEach((btn) => {
+          btn.classList.toggle("is-active", btn.dataset.lang === lang);
+          btn.setAttribute("aria-pressed", btn.dataset.lang === lang ? "true" : "false");
+        });
+        document.title =
+          lang === "pt" ? "RFS Grupo Holding" : "RFS Holding Group";
+        document.querySelector('meta[name="description"]').content = lang === "pt"
+          ? "A RFS é a holding de longo prazo por trás do Sunergies Group e de um ecossistema diversificado de energia no Brasil."
+          : "RFS is the long-horizon holding company behind Sunergies Group and a diversified energy ecosystem in Brazil.";
+        localStorage.setItem("rfs-lang", lang);
+      }
+
+      const mainEl = document.getElementById("main");
+      document.querySelectorAll(".lang-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const lang = btn.dataset.lang;
+          mainEl.classList.add("lang-fade");
+          setTimeout(() => {
+            applyLang(lang);
+            mainEl.classList.remove("lang-fade");
+          }, 180);
+        });
+      });
+
+      applyLang(localStorage.getItem("rfs-lang") || "en");
+
+      const header = document.getElementById("header");
+      window.addEventListener("scroll", () => {
+        header.classList.toggle("is-scrolled", window.scrollY > 40);
+      });
+
+      // Unit expand/collapse — one open at a time
+      document.querySelectorAll(".unit-row").forEach((btn) => {
+        const detail = btn.nextElementSibling;
+        const detailId = `unit-detail-${btn.closest(".unit").dataset.unit}`;
+        detail.id = detailId;
+        btn.setAttribute("aria-controls", detailId);
+        btn.addEventListener("click", () => {
+          const unit = btn.closest(".unit");
+          const wasOpen = unit.dataset.open === "true";
+          document.querySelectorAll(".unit").forEach((u) => {
+            u.dataset.open = "false";
+            u.querySelector(".unit-row").setAttribute("aria-expanded", "false");
+          });
+          if (!wasOpen) {
+            unit.dataset.open = "true";
+            btn.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+
+      // Dotted Brazil map — simplified silhouette clip + dot grid
+      (function buildMap() {
+        const svg = document.getElementById("eco-map-svg");
+        const NS = "http://www.w3.org/2000/svg";
+        const defs = document.createElementNS(NS, "defs");
+        const clip = document.createElementNS(NS, "clipPath");
+        clip.setAttribute("id", "brazil-clip");
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute(
+          "d",
+          "M130,8 C190,4 250,18 288,55 C324,90 342,135 338,185 C334,235 352,270 344,315 C336,358 304,388 268,410 C236,430 210,452 176,450 C144,448 128,422 108,402 C82,376 58,352 48,316 C36,276 44,232 40,190 C36,148 56,110 78,78 C96,52 100,26 130,8 Z"
+        );
+        clip.appendChild(path);
+        defs.appendChild(clip);
+        svg.appendChild(defs);
+
+        const g = document.createElementNS(NS, "g");
+        g.setAttribute("clip-path", "url(#brazil-clip)");
+        const pitch = 14;
+        const dots = [];
+        for (let y = 0; y <= 460; y += pitch) {
+          for (let x = 0; x <= 400; x += pitch) {
+            const c = document.createElementNS(NS, "circle");
+            c.setAttribute("cx", x);
+            c.setAttribute("cy", y);
+            c.setAttribute("r", 1.6);
+            g.appendChild(c);
+            dots.push(c);
+          }
+        }
+        svg.appendChild(g);
+
+        const pulseCount = Math.min(8, dots.length);
+        const used = new Set();
+        for (let i = 0; i < pulseCount; i++) {
+          let idx;
+          do { idx = Math.floor(Math.random() * dots.length); } while (used.has(idx));
+          used.add(idx);
+          const c = dots[idx];
+          c.classList.add("pulse");
+          c.style.animationDelay = (i * 0.6) + "s";
+        }
+      })();
+
+      // Scroll reveals via IntersectionObserver
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            if (entry.target.classList.contains("manifesto-lines")) {
+              entry.target.querySelectorAll("span").forEach((s, i) => {
+                s.style.animationDelay = i * 0.15 + "s";
+                s.classList.add("reveal");
+              });
+            } else {
+              entry.target.classList.add("reveal");
+            }
+            io.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.35 }
+      );
+      io.observe(document.querySelector(".manifesto-lines"));
+      io.observe(document.querySelector(".model-layers"));
+      io.observe(document.querySelector(".eco-diagram"));
+      io.observe(document.querySelector(".flag-wipe"));
+      io.observe(document.querySelector(".flag-stats"));
+
+      // Stat count-up, once
+      const statIo = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.querySelectorAll(".stat-num").forEach((el) => {
+              const target = parseInt(el.dataset.count, 10);
+              const suffix = el.dataset.suffix || "";
+              const duration = 1200;
+              const start = performance.now();
+              function tick(now) {
+                const p = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = Math.round(target * eased) + suffix;
+                if (p < 1) requestAnimationFrame(tick);
+              }
+              requestAnimationFrame(tick);
+            });
+            statIo.unobserve(entry.target);
+          });
+        },
+        { threshold: 0.5 }
+      );
+      statIo.observe(document.querySelector(".flag-stats"));
+
+      // Keep the current section visible in the desktop navigation.
+      const navLinks = [...document.querySelectorAll(".site-nav a")];
+      const navSections = navLinks
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+      const navIo = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            navLinks.forEach((link) => {
+              const isCurrent = link.getAttribute("href") === `#${entry.target.id}`;
+              if (isCurrent) link.setAttribute("aria-current", "page");
+              else link.removeAttribute("aria-current");
+            });
+          });
+        },
+        { rootMargin: "-35% 0px -55% 0px" }
+      );
+      navSections.forEach((section) => navIo.observe(section));
+
+      // Hero entrance timeline (once, on load)
+      function playEntrance() {
+        const horizon = document.querySelector(".horizon-line");
+        const dome = document.querySelector(".hero-mark");
+        const word = document.querySelector(".hero-word");
+        const tag = document.querySelector(".hero-tag");
+        const h1 = document.querySelector(".hero h1");
+        const sub = document.querySelector(".hero-sub");
+        const hdr = document.getElementById("header");
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) {
+          [dome, word, tag, h1, sub, hdr, horizon].forEach((el) => el && el.classList.add("reveal"));
+          dome.classList.add("shimmer");
+          return;
+        }
+        horizon.classList.add("reveal");
+        setTimeout(() => dome.classList.add("reveal", "shimmer"), 500);
+        setTimeout(() => word.classList.add("reveal"), 1300);
+        setTimeout(() => tag.classList.add("reveal"), 1380);
+        setTimeout(() => h1.classList.add("reveal"), 1500);
+        setTimeout(() => sub.classList.add("reveal"), 1620);
+        setTimeout(() => hdr.classList.add("reveal"), 1900);
+      }
+      window.addEventListener("load", playEntrance);
+    </script>
+  </body>
+</html>
