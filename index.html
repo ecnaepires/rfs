@@ -1649,7 +1649,10 @@
       }
       window.addEventListener("load", playEntrance);
 
-      // ============ v2 experience engine ("The Crossing") ============
+      // ============ v2 experience engine ("The Road") ============
+      // Scroll drives a first-person night ride down a dead-straight highway.
+      // Each ecosystem company is a lit structure by the roadside, alternating
+      // left / right; the sun rises dead ahead at the Sunergies chapter.
       (function () {
         const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const narrow = window.innerWidth < 360;
@@ -1670,6 +1673,9 @@
         const experienceIntro = document.getElementById("experience-intro");
         const enterExperienceButton = document.getElementById("enter-experience");
 
+        bgA.style.background = "#040407";
+        bgB.style.opacity = 0;
+
         window.scrollTo(0, 0);
         function enterExperience(event) {
           if (document.documentElement.classList.contains("experience-entered")) return;
@@ -1687,10 +1693,17 @@
         enterExperienceButton.addEventListener("click", enterExperience);
         window.setTimeout(() => enterExperienceButton.focus(), 120);
 
-        const TOTAL_DEPTH = 9000;
-        const FOCAL = 420;
+        // ---- world constants ----
+        const TOTAL_DEPTH = 9000; // road length in world units; 100 units = 1 km
+        const CAM_H = 4;          // camera height above the asphalt
+        const ROAD_W = 4.6;       // half-width of the road
+        const DRAW_DIST = 1500;   // render distance ahead of the camera
         const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-        const rand = (a, b) => a + Math.random() * (b - a);
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const prnd = (n) => {
+          const s = Math.sin(n * 127.1) * 43758.5453;
+          return s - Math.floor(s);
+        };
         function smoothstep(e0, e1, x) {
           const t = clamp((x - e0) / (e1 - e0), 0, 1);
           return t * t * (3 - 2 * t);
@@ -1701,41 +1714,9 @@
           if (p > outStart) return 1 - smoothstep(outStart, outEnd, p);
           return 1;
         }
-
-        // ---- particle field ----
         const isMobile = window.innerWidth < 880;
-        const FIELD_N = isMobile ? 220 : 450;
-        const field = [];
-        for (let i = 0; i < FIELD_N; i++) {
-          field.push({
-            x: rand(-600, 600),
-            y: rand(-340, 340),
-            z: rand(0, TOTAL_DEPTH),
-            r: rand(0.5, 2.5),
-            a: rand(0.15, 0.9),
-            phase: rand(0, Math.PI * 2),
-            driftX: rand(5, 28),
-            driftY: rand(4, 18),
-            twinkle: rand(0.6, 1.8),
-          });
-        }
-        const MAX_DIST2 = 170 * 170;
-        const edges = [];
-        for (let i = 0; i < field.length; i++) {
-          let links = 0;
-          for (let j = i + 1; j < field.length; j++) {
-            const dx = field[i].x - field[j].x,
-              dy = field[i].y - field[j].y,
-              dz = field[i].z - field[j].z;
-            if (dx * dx + dy * dy + dz * dz < MAX_DIST2) {
-              edges.push([i, j]);
-              links += 1;
-              if (links === 2) break;
-            }
-          }
-        }
 
-        // ---- unit nodes (the ten business units flight stations) ----
+        // ---- the ten verticals as roadside stations ----
         const UNIT_ORDER = ["usinas","sungov","sunnews","suncashback","sunlife","sunpower","sunsquad","sunchargers","sundex","pdi"];
         const UNIT_NAME = {
           usinas: "Usinas de Investimento", sungov: "SunGov Deals", sunnews: "Sun News",
@@ -1743,31 +1724,23 @@
           sunsquad: "SunSquad", sunchargers: "SunChargers", sundex: "Sundex", pdi: "P&DI",
         };
         const UNIT_SIDE = ["left","right","left","right","left","right","left","right","left","right"];
-        const UNIT_Y = [-70, 55, -40, 70, -55, 35, -65, 50, -35, 65];
         const STATION_START = 0.40;
         const STATION_WIDTH = 0.36;
-        const HOLD_OFFSET = 150;
         const STATION_STEP = STATION_WIDTH / 10;
 
-        const unitNodes = UNIT_ORDER.map((key, i) => {
+        const stations = UNIT_ORDER.map((key, i) => {
           const center = STATION_START + (i + 0.5) * STATION_STEP;
+          const dir = UNIT_SIDE[i] === "left" ? -1 : 1;
           return {
-            index: i,
-            key,
-            side: UNIT_SIDE[i],
-            x: (UNIT_SIDE[i] === "left" ? -1 : 1) * (isMobile ? 40 : 112) + rand(-10, 10),
-            y: UNIT_Y[i],
-            z: center * TOTAL_DEPTH + HOLD_OFFSET,
+            index: i, key, side: UNIT_SIDE[i], dir,
+            x: dir * 16.5,
+            z: center * TOTAL_DEPTH + 60,
             center,
-            inStart: center - 0.014,
-            inEnd: center - 0.004,
-            outStart: center + 0.010,
-            outEnd: center + 0.020,
+            inStart: center - 0.016, inEnd: center - 0.006,
+            outStart: center + 0.008, outEnd: center + 0.018,
           };
         });
-
-        // Build the DOM cards for each unit
-        unitNodes.forEach((node) => {
+        stations.forEach((node) => {
           const card = document.createElement("div");
           card.className = "unit-card side-" + node.side;
           card.innerHTML =
@@ -1778,71 +1751,61 @@
           node.card = card;
         });
 
-        // ---- background chapter gradients (pure cross-dissolve, no color lerp) ----
-        const BG_STOPS = [
-          { at: 0.0, css: "linear-gradient(180deg, oklch(6% .01 270), var(--black-deep))" },
-          { at: 0.19, css: "linear-gradient(180deg, var(--black-deep), var(--black))" },
-          { at: 0.76, css: "linear-gradient(180deg, var(--gold-hot), var(--gold))" },
-          { at: 0.90, css: "linear-gradient(180deg, var(--black), oklch(5% .008 60))" },
+        // ---- fixed scenery along the road ----
+        const pylons = [];
+        for (let z = 520; z <= 3200; z += 340) {
+          pylons.push({ z, x: -27 - prnd(z) * 5, h: 11 });
+          pylons.push({ z: z + 170, x: 33 + prnd(z + 9) * 6, h: 10 });
+        }
+        const GANTRY_Z = 0.385 * TOTAL_DEPTH;
+
+        const STAR_N = isMobile ? 90 : 190;
+        const stars = [];
+        for (let i = 0; i < STAR_N; i++) {
+          stars.push({
+            nx: prnd(i + 0.17), ny: prnd(i + 0.53) * 0.42,
+            r: 0.4 + prnd(i + 0.71) * 1.1,
+            tw: 0.5 + prnd(i + 0.29) * 1.6,
+            phase: prnd(i + 0.91) * Math.PI * 2,
+          });
+        }
+        const clouds = [];
+        for (let i = 0; i < 4; i++) {
+          clouds.push({
+            nx: prnd(i + 3.1), ny: 0.30 + prnd(i + 4.7) * 0.09,
+            w: 0.16 + prnd(i + 5.3) * 0.18, h: 0.012 + prnd(i + 6.9) * 0.012,
+            drift: 0.000003 + prnd(i + 8.2) * 0.000004,
+          });
+        }
+
+        // ---- sky / light keyframes: night -> dawn -> gold -> first light ----
+        const KEYS = [
+          { at: 0.00, top: [4,4,9],    mid: [8,8,15],    hor: [26,20,10],  ground: [8,7,5],    road: [10,10,11], glow: 0.10, stars: 1.0 },
+          { at: 0.35, top: [5,5,11],   mid: [10,9,17],   hor: [40,29,13],  ground: [9,8,5],    road: [11,11,12], glow: 0.14, stars: 0.9 },
+          { at: 0.60, top: [7,7,15],   mid: [17,13,19],  hor: [74,50,18],  ground: [11,9,6],   road: [13,12,12], glow: 0.24, stars: 0.6 },
+          { at: 0.74, top: [15,12,20], mid: [52,34,18],  hor: [158,104,34],ground: [17,13,8],  road: [18,15,12], glow: 0.55, stars: 0.15 },
+          { at: 0.795,top: [233,203,92],mid:[221,183,62],hor: [249,224,122],ground:[199,163,50],road:[176,143,42],glow: 1.0,  stars: 0 },
+          { at: 0.875,top: [233,203,92],mid:[221,183,62],hor: [249,224,122],ground:[199,163,50],road:[176,143,42],glow: 1.0,  stars: 0 },
+          { at: 0.94, top: [6,6,11],   mid: [10,10,16],  hor: [38,29,14],  ground: [9,8,5],    road: [11,11,12], glow: 0.20, stars: 0.55 },
+          { at: 1.00, top: [5,5,10],   mid: [9,9,15],    hor: [34,26,13],  ground: [8,7,5],    road: [10,10,11], glow: 0.18, stars: 0.6 },
         ];
-        function updateBg(p) {
-          let idx = 0;
-          for (let i = 0; i < BG_STOPS.length; i++) if (p >= BG_STOPS[i].at) idx = i;
-          const cur = BG_STOPS[idx];
-          const next = BG_STOPS[idx + 1];
-          bgA.style.background = cur.css;
-          if (!next) {
-            bgB.style.opacity = 0;
-            return;
-          }
-          const win = 0.03;
-          const t = clamp((p - (next.at - win)) / win, 0, 1);
-          bgB.style.background = next.css;
-          bgB.style.opacity = t;
+        function skyAt(p) {
+          let i = 0;
+          while (i < KEYS.length - 2 && p > KEYS[i + 1].at) i++;
+          const a = KEYS[i], b = KEYS[i + 1];
+          const t = smoothstep(a.at, b.at, p);
+          const mix = (ka, kb) => [
+            lerp(ka[0], kb[0], t), lerp(ka[1], kb[1], t), lerp(ka[2], kb[2], t),
+          ];
+          return {
+            top: mix(a.top, b.top), mid: mix(a.mid, b.mid), hor: mix(a.hor, b.hor),
+            ground: mix(a.ground, b.ground), road: mix(a.road, b.road),
+            glow: lerp(a.glow, b.glow, t), stars: lerp(a.stars, b.stars, t),
+          };
         }
+        const rgba = (c, a) => "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + a + ")";
 
-        // ---- watermark text (pure function of progress) ----
-        function watermarkTextFor(p) {
-          if (p < 0.075) return "";
-          if (p < 0.19) return "RFS";
-          if (p < 0.35) return "SUNERGIES";
-          if (p < 0.40) return I18N[currentLang()]["wm.eco"] || "ECOSYSTEM";
-          if (p < 0.76) {
-            const idx = clamp(Math.floor((p - STATION_START) / STATION_STEP), 0, 9);
-            return UNIT_NAME[UNIT_ORDER[idx]].toUpperCase();
-          }
-          if (p < 0.785) return "SUNERGIES";
-          if (p < 0.83) return "2014";
-          if (p < 0.90) return "500+ MW";
-          return "RFS";
-        }
-        function currentLang() {
-          return document.documentElement.lang === "pt" ? "pt" : "en";
-        }
-
-        // ---- overlay chapter envelopes ----
-        const ovHero = document.getElementById("ov-hero");
-        const ovManifesto = document.getElementById("ov-manifesto");
-        const ovModel = [
-          document.getElementById("ov-model-0"),
-          document.getElementById("ov-model-1"),
-          document.getElementById("ov-model-2"),
-        ];
-        const ovEcoIntro = document.getElementById("ov-eco-intro");
-        const ovFlagship = document.getElementById("ov-flagship");
-        const ovContact = document.getElementById("ov-contact");
-
-        function setOpacity(el, v) {
-          el.style.opacity = v;
-          el.style.pointerEvents = v > 0.4 ? "auto" : "none";
-          const inner = el.firstElementChild;
-          if (inner) {
-            inner.style.transform = "translate3d(0," + ((1 - v) * 22) + "px,0) scale(" + (0.985 + v * 0.015) + ")";
-            inner.style.filter = "blur(" + ((1 - v) * 5) + "px)";
-          }
-        }
-
-        // ---- resize / canvas sizing ----
+        // ---- resize ----
         let cw = window.innerWidth, ch = window.innerHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
         function resize() {
           cw = window.innerWidth;
@@ -1857,12 +1820,10 @@
         resize();
         window.addEventListener("resize", resize);
 
-        // ---- resolved colors (read once; canvas fillStyle accepts oklch() in Chromium) ----
         const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
         const COLOR_GOLD = cssVar("--gold") || "#d4af37";
-        const COLOR_INK = cssVar("--ink-on-gold") || "#1a1712";
-        const GOLD_RGB = "212,175,55";
-        const INK_RGB = "26,23,18";
+        const GOLD = [212, 175, 55];
+        const INK = [26, 23, 18];
 
         const pointer = { targetX: 0, targetY: 0, x: 0, y: 0 };
         window.addEventListener("pointermove", (event) => {
@@ -1874,270 +1835,237 @@
           pointer.targetY = 0;
         });
 
+        // per-frame view state, set at the top of loop()
+        let horizonY = 0, focal = 0, pan = 0;
         function project(x, y, z, camZ) {
           const rel = z - camZ;
-          if (rel <= 1) return null;
-          const scale = FOCAL / rel;
-          const depth = clamp(1 - rel / TOTAL_DEPTH, 0, 1);
+          if (rel < 8) return null;
+          const u = focal / rel;
           return {
-            sx: cw / 2 + x * scale + pointer.x * (10 + depth * 24),
-            sy: ch / 2 + y * scale + pointer.y * (7 + depth * 16),
-            scale,
-            rel,
+            sx: cw / 2 + pan + x * u,
+            sy: horizonY + (CAM_H - y) * u,
+            u, rel,
           };
         }
 
-        function projectParticle(particle, camZ, time) {
-          let rel = (particle.z - camZ + TOTAL_DEPTH) % TOTAL_DEPTH;
-          if (rel < 24) rel += TOTAL_DEPTH;
-          const scale = FOCAL / rel;
-          const seconds = time * 0.001;
-          const x = particle.x + Math.sin(seconds * 0.16 + particle.phase) * particle.driftX;
-          const y = particle.y + Math.cos(seconds * 0.13 + particle.phase) * particle.driftY;
-          const depth = clamp(1 - rel / TOTAL_DEPTH, 0, 1);
-          return {
-            sx: cw / 2 + x * scale + pointer.x * (8 + depth * 28),
-            sy: ch / 2 + y * scale + pointer.y * (5 + depth * 18),
-            scale,
-            rel,
-            depth,
-          };
+        // ---- roadside structure drawings (one per vertical) ----
+        // Each draws at the projected ground point; +x faces away from the road.
+        function line(x1, y1, x2, y2) {
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+        function box(x, y, w, h) {
+          ctx.strokeRect(x, -y - h, w, h);
         }
 
-        function drawSolarPlane(cx, cy, width, height, rotation, alpha, rgb, time, seed) {
-          const seconds = time * 0.001;
-          const floatY = Math.sin(seconds * 0.22 + seed) * 7;
-          const points = [
-            [-width * 0.50, -height * 0.45],
-            [ width * 0.50, -height * 0.26],
-            [ width * 0.44,  height * 0.46],
-            [-width * 0.46,  height * 0.28],
-          ];
-          const lerpPoint = (a, b, amount) => [
-            a[0] + (b[0] - a[0]) * amount,
-            a[1] + (b[1] - a[1]) * amount,
-          ];
-
-          ctx.save();
-          ctx.translate(cx, cy + floatY);
-          ctx.rotate(rotation + Math.sin(seconds * 0.08 + seed) * 0.012);
-
-          ctx.fillStyle = "rgba(" + rgb + "," + alpha + ")";
+        function drawUsinas(u, time) {
+          for (let row = 0; row < 3; row++) {
+            const ro = row * 2.6, sh = 1 - row * 0.13;
+            ctx.globalAlpha *= row === 0 ? 1 : 0.82;
+            for (let i = 0; i < 4; i++) {
+              const px = (i * 3.4 + row * 1.1) * u, tilt = 0.7 * u * sh;
+              ctx.beginPath();
+              ctx.moveTo(px, -(0.6 + ro * 0.12) * u);
+              ctx.lineTo(px + 2.6 * u * sh, -(0.6 + ro * 0.12) * u);
+              ctx.lineTo(px + 2.6 * u * sh - tilt, -(2.2 + ro * 0.12) * u * sh);
+              ctx.lineTo(px - tilt, -(2.2 + ro * 0.12) * u * sh);
+              ctx.closePath();
+              ctx.stroke();
+              line(px + 1.3 * u * sh, -(0.6 + ro * 0.12) * u, px + 1.3 * u * sh, 0);
+            }
+          }
+        }
+        function drawSunGov(u) {
+          box(0, 0, 10 * u, 0.8 * u);
+          for (let i = 0; i < 4; i++) line((1.4 + i * 2.4) * u, -0.8 * u, (1.4 + i * 2.4) * u, -4.6 * u);
+          box(0.4, 4.6, 9.2 * u, 0.7 * u);
           ctx.beginPath();
-          ctx.moveTo(points[0][0], points[0][1]);
-          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.fillStyle = "rgba(" + rgb + "," + (alpha * 0.48) + ")";
-          ctx.beginPath();
-          ctx.moveTo(points[0][0], points[0][1]);
-          ctx.lineTo(points[1][0], points[1][1]);
-          ctx.lineTo(points[2][0], points[2][1]);
-          ctx.closePath();
-          ctx.fill();
-
-          ctx.strokeStyle = "rgba(" + rgb + "," + Math.min(alpha * 2.8, 0.48) + ")";
-          ctx.lineWidth = 0.8;
-          ctx.beginPath();
-          ctx.moveTo(points[0][0], points[0][1]);
-          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+          ctx.moveTo(0.2 * u, -5.3 * u);
+          ctx.lineTo(5 * u, -6.8 * u);
+          ctx.lineTo(9.8 * u, -5.3 * u);
           ctx.closePath();
           ctx.stroke();
-
-          for (let column = 1; column < 6; column++) {
-            const amount = column / 6;
-            const top = lerpPoint(points[0], points[1], amount);
-            const bottom = lerpPoint(points[3], points[2], amount);
+          ctx.beginPath();
+          ctx.arc(5 * u, -6.8 * u, 1.3 * u, Math.PI, 0);
+          ctx.stroke();
+          line(-1.6 * u, 0, -1.6 * u, -7.2 * u);
+          ctx.beginPath();
+          ctx.moveTo(-1.6 * u, -7.2 * u);
+          ctx.lineTo(-3.4 * u, -6.75 * u);
+          ctx.lineTo(-1.6 * u, -6.3 * u);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        function drawSunNews(u, time) {
+          line(-1.6 * u, 0, -0.25 * u, -12 * u);
+          line(1.6 * u, 0, 0.25 * u, -12 * u);
+          for (let i = 1; i <= 5; i++) {
+            const y = i * 2 * u, w = (1.6 - i * 0.27) * u;
+            line(-w, -y, w, -y + 1.4 * u);
+            line(w, -y, -w, -y + 1.4 * u);
+          }
+          line(0, -12 * u, 0, -13.4 * u);
+          const pulse = (time * 0.0012) % 1;
+          for (let i = 0; i < 3; i++) {
+            const r = (1.1 + i * 0.9 + pulse * 0.5) * u;
+            ctx.globalAlpha *= 0.85 - i * 0.18;
             ctx.beginPath();
-            ctx.moveTo(top[0], top[1]);
-            ctx.lineTo(bottom[0], bottom[1]);
+            ctx.arc(0, -12.6 * u, r, -Math.PI * 0.78, -Math.PI * 0.22);
             ctx.stroke();
           }
-          for (let row = 1; row < 4; row++) {
-            const amount = row / 4;
-            const left = lerpPoint(points[0], points[3], amount);
-            const right = lerpPoint(points[1], points[2], amount);
+          box(2.2, 0, 2.6 * u, 1.6 * u);
+        }
+        function drawSunCashback(u, time) {
+          box(0, 0, 4.2 * u, 2.6 * u);
+          line(-0.4 * u, -2.6 * u, 4.6 * u, -2.6 * u);
+          line(1.1 * u, -2.6 * u, 1.1 * u, -3.1 * u);
+          line(3.1 * u, -2.6 * u, 3.1 * u, -3.1 * u);
+          line(6.4 * u, 0, 6.4 * u, -3.4 * u);
+          const wob = Math.sin(time * 0.002) * 0.1 * u;
+          ctx.beginPath();
+          ctx.arc(6.4 * u, -5.2 * u + wob, 1.8 * u, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(5.8 * u, -5.7 * u + wob, 0.32 * u, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(7.0 * u, -4.7 * u + wob, 0.32 * u, 0, Math.PI * 2);
+          ctx.stroke();
+          line(5.7 * u, -4.5 * u + wob, 7.1 * u, -5.9 * u + wob);
+        }
+        function drawSunLife(u) {
+          box(0, 0, 6 * u, 3 * u);
+          line(-0.3 * u, -3 * u, 6.3 * u, -3 * u);
+          box(2.5, 0, 1 * u, 1.7 * u);
+          line(8 * u, 0, 8 * u, -6 * u);
+          box(6.9, 6, 2.2 * u, 2.2 * u);
+          line(8 * u, -6.5 * u, 8 * u, -7.7 * u);
+          line(7.4 * u, -7.1 * u, 8.6 * u, -7.1 * u);
+        }
+        function drawSunPower(u) {
+          box(0, 0, 3 * u, 9 * u);
+          for (let i = 1; i <= 5; i++) line(0.3 * u, -i * 1.5 * u, 2.7 * u, -i * 1.5 * u);
+          line(1.5 * u, -9 * u, 1.5 * u, -9.9 * u);
+          box(3.6, 0, 2.5 * u, 6.4 * u);
+          for (let i = 1; i <= 4; i++) line(3.9 * u, -i * 1.45 * u, 5.8 * u, -i * 1.45 * u);
+          ctx.beginPath();
+          ctx.moveTo(3.7 * u, -6.4 * u);
+          ctx.lineTo(6.1 * u, -7.3 * u);
+          ctx.stroke();
+          line(-1 * u, 0, 7 * u, 0);
+        }
+        function drawSunSquad(u, time) {
+          line(-1.5 * u, 0, 5.5 * u, 0);
+          for (let i = 0; i < 3; i++) {
+            const px = i * 2.5 * u, h = (5 + (i === 1 ? 1.2 : 0)) * u;
+            line(px, 0, px, -h);
+            const w = Math.sin(time * 0.003 + i * 1.7) * 0.22;
             ctx.beginPath();
-            ctx.moveTo(left[0], left[1]);
-            ctx.lineTo(right[0], right[1]);
+            ctx.moveTo(px, -h);
+            ctx.quadraticCurveTo(px + 0.9 * u, -h - (0.45 + w) * u, px + 1.8 * u, -h + (0.15 - w) * u);
+            ctx.lineTo(px, -h + 0.75 * u);
+            ctx.closePath();
             ctx.stroke();
           }
-          ctx.restore();
         }
-
-        function drawSolarWorld(p, time, inGold) {
-          const hero = 1 - smoothstep(0.045, 0.105, p);
-          const manifesto = envelope(p, 0.07, 0.10, 0.17, 0.20);
-          const units = envelope(p, 0.36, 0.40, 0.73, 0.77);
-          const flagship = envelope(p, 0.75, 0.78, 0.88, 0.91);
-          const rgb = inGold ? INK_RGB : GOLD_RGB;
-
-          if (hero > 0.01) {
-            drawSolarPlane(
-              cw * 0.06 + pointer.x * 34,
-              ch * 0.63 + pointer.y * 18,
-              Math.max(cw * 0.40, 360),
-              Math.max(ch * 0.50, 300),
-              -0.25,
-              0.095 * hero,
-              rgb,
-              time,
-              0.4
-            );
-            drawSolarPlane(
-              cw * 0.94 + pointer.x * 24,
-              ch * 0.38 + pointer.y * 14,
-              Math.max(cw * 0.34, 320),
-              Math.max(ch * 0.42, 270),
-              0.28,
-              0.082 * hero,
-              rgb,
-              time,
-              2.1
-            );
-          }
-
-          if (manifesto > 0.01) {
-            drawSolarPlane(
-              cw * 0.83 + pointer.x * 26,
-              ch * 0.56,
-              Math.max(cw * 0.44, 420),
-              Math.max(ch * 0.58, 330),
-              0.16,
-              0.07 * manifesto,
-              rgb,
-              time,
-              3.4
-            );
-          }
-
-          if (units > 0.01) {
-            const travel = ((p - 0.36) / 0.41) * Math.PI * 2;
-            drawSolarPlane(
-              cw * (0.10 + Math.sin(travel) * 0.025),
-              ch * 0.72,
-              Math.max(cw * 0.30, 280),
-              Math.max(ch * 0.40, 250),
-              -0.18,
-              0.055 * units,
-              rgb,
-              time,
-              4.7
-            );
-            drawSolarPlane(
-              cw * (0.91 + Math.cos(travel) * 0.02),
-              ch * 0.28,
-              Math.max(cw * 0.26, 260),
-              Math.max(ch * 0.34, 230),
-              0.22,
-              0.045 * units,
-              rgb,
-              time,
-              6.2
-            );
-          }
-
-          if (flagship > 0.01) {
-            drawSolarPlane(
-              cw * 0.87,
-              ch * 0.56,
-              Math.max(cw * 0.48, 460),
-              Math.max(ch * 0.62, 360),
-              0.12,
-              0.055 * flagship,
-              rgb,
-              time,
-              7.8
-            );
-          }
+        function drawSunChargers(u, time) {
+          line(0, 0, 0, -4 * u);
+          line(5 * u, 0, 5 * u, -4 * u);
+          line(-1.2 * u, -4 * u, 6.2 * u, -4 * u);
+          line(-1.2 * u, -4.35 * u, 6.2 * u, -4.35 * u);
+          box(0.7, 0, 1 * u, 2.2 * u);
+          ctx.strokeRect(0.9 * u, -2 * u, 0.6 * u, 0.5 * u);
+          const car = 2.6 * u;
+          ctx.beginPath();
+          ctx.moveTo(car, -0.5 * u);
+          ctx.lineTo(car + 0.5 * u, -1.25 * u);
+          ctx.lineTo(car + 1.9 * u, -1.25 * u);
+          ctx.lineTo(car + 2.6 * u, -0.5 * u);
+          ctx.lineTo(car + 3.1 * u, -0.5 * u);
+          ctx.lineTo(car + 3.1 * u, -0.15 * u);
+          ctx.lineTo(car - 0.4 * u, -0.15 * u);
+          ctx.lineTo(car - 0.4 * u, -0.5 * u);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(car + 0.45 * u, -0.15 * u, 0.3 * u, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(car + 2.35 * u, -0.15 * u, 0.3 * u, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(1.5 * u, -1.9 * u);
+          ctx.quadraticCurveTo(2.1 * u, -1.9 * u, 2.5 * u, -1.25 * u);
+          ctx.stroke();
+          const dot = (time * 0.0015) % 1;
+          ctx.beginPath();
+          ctx.arc((1.5 + dot) * u, (-1.9 + dot * 0.62) * u, 0.14 * u, 0, Math.PI * 2);
+          ctx.fill();
         }
+        function drawSundex(u, time) {
+          line(-0.5 * u, 0, 5.5 * u, 0);
+          const cube = (cx, cy, s) => {
+            ctx.strokeRect(cx - s / 2, -cy - s, s, s);
+            ctx.beginPath();
+            ctx.moveTo(cx - s / 2, -cy - s);
+            ctx.lineTo(cx - s / 2 + s * 0.35, -cy - s - s * 0.32);
+            ctx.lineTo(cx + s / 2 + s * 0.35, -cy - s - s * 0.32);
+            ctx.lineTo(cx + s / 2, -cy - s);
+            ctx.stroke();
+          };
+          cube(1.4 * u, 0, 2.1 * u);
+          cube(3.6 * u, 0, 1.7 * u);
+          const float = Math.sin(time * 0.0018) * 0.25 * u;
+          cube(2.5 * u, 3.1 * u + float / u * u, 1.5 * u);
+          line(1.4 * u, -2.1 * u, 2.2 * u, -3.1 * u - float);
+          line(3.6 * u, -1.7 * u, 2.9 * u, -3.1 * u - float);
+          ctx.beginPath();
+          ctx.arc(2.5 * u, -5.3 * u - float, 0.2 * u, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        function drawPdi(u, time) {
+          line(0, 0, 1.6 * u, -3 * u);
+          line(3.2 * u, 0, 1.6 * u, -3 * u);
+          line(0.8 * u, -1.5 * u, 2.4 * u, -1.5 * u);
+          ctx.beginPath();
+          ctx.ellipse(1.6 * u, -3.9 * u, 2 * u, 1 * u, -0.5, 0, Math.PI);
+          ctx.stroke();
+          line(1.6 * u, -3.9 * u, 2.5 * u, -5.3 * u);
+          ctx.beginPath();
+          ctx.arc(2.5 * u, -5.3 * u, 0.22 * u, 0, Math.PI * 2);
+          ctx.fill();
+          box(4.6, 0, 2.8 * u, 1.9 * u);
+          const orbit = time * 0.001;
+          ctx.beginPath();
+          ctx.ellipse(6 * u, -1.9 * u, 1.5 * u, 0.55 * u, -0.4, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(6 * u + Math.cos(orbit) * 1.5 * u, -1.9 * u + Math.sin(orbit) * 0.55 * u, 0.16 * u, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        const SCENE_DRAW = {
+          usinas: drawUsinas, sungov: drawSunGov, sunnews: drawSunNews,
+          suncashback: drawSunCashback, sunlife: drawSunLife, sunpower: drawSunPower,
+          sunsquad: drawSunSquad, sunchargers: drawSunChargers, sundex: drawSundex, pdi: drawPdi,
+        };
 
-        function drawSolarEnvironment(p, time, inGold) {
-          const seconds = time * 0.001;
-          const rgb = inGold ? INK_RGB : GOLD_RGB;
-          const heroStrength = 1 - smoothstep(0.035, 0.095, p);
-          const modelStrength = envelope(p, 0.18, 0.21, 0.34, 0.38);
-          const arrivalStrength = smoothstep(0.90, 0.95, p);
-
+        function drawPylon(proj, h, strokeStyle, alpha) {
+          const u = proj.u;
+          ctx.strokeStyle = strokeStyle;
+          ctx.globalAlpha = alpha;
+          ctx.lineWidth = clamp(0.09 * u, 0.5, 1.6);
           ctx.save();
-          ctx.globalCompositeOperation = inGold ? "source-over" : "lighter";
-          drawSolarWorld(p, time, inGold);
-
-          if (heroStrength > 0.01) {
-            const sunX = cw * 0.5 + pointer.x * 24;
-            const sunY = ch * 0.43 + pointer.y * 14;
-            const sunR = Math.min(cw, ch) * (0.26 + Math.sin(seconds * 0.35) * 0.008);
-            const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR);
-            halo.addColorStop(0, "rgba(" + GOLD_RGB + "," + (0.13 * heroStrength) + ")");
-            halo.addColorStop(0.36, "rgba(" + GOLD_RGB + "," + (0.055 * heroStrength) + ")");
-            halo.addColorStop(1, "rgba(" + GOLD_RGB + ",0)");
-            ctx.fillStyle = halo;
-            ctx.fillRect(0, 0, cw, ch);
-
-            ctx.strokeStyle = "rgba(" + GOLD_RGB + "," + (0.16 * heroStrength) + ")";
-            ctx.lineWidth = 1;
-            for (let ring = 0; ring < 3; ring++) {
-              const radius = sunR * (0.46 + ring * 0.23) + Math.sin(seconds * 0.45 + ring) * 5;
-              ctx.beginPath();
-              ctx.arc(sunX, sunY, radius, -0.18 * Math.PI, 1.18 * Math.PI);
-              ctx.stroke();
-            }
+          ctx.translate(proj.sx, proj.sy);
+          line(-1.3 * u, 0, -0.18 * u, -h * u);
+          line(1.3 * u, 0, 0.18 * u, -h * u);
+          for (let i = 1; i <= 3; i++) {
+            const y = i * (h / 4) * u, w = (1.3 - i * 0.28) * u;
+            line(-w, -y, w, -y);
           }
-
-          const currentAlpha = (inGold ? 0.085 : 0.11) * (0.72 + Math.sin(seconds * 0.22) * 0.12);
-          const currentGradient = ctx.createLinearGradient(0, 0, cw, 0);
-          currentGradient.addColorStop(0, "rgba(" + rgb + ",0)");
-          currentGradient.addColorStop(0.2, "rgba(" + rgb + "," + currentAlpha + ")");
-          currentGradient.addColorStop(0.8, "rgba(" + rgb + "," + currentAlpha + ")");
-          currentGradient.addColorStop(1, "rgba(" + rgb + ",0)");
-          ctx.strokeStyle = currentGradient;
-          for (let current = 0; current < 4; current++) {
-            const baseY = ch * (0.40 + current * 0.105) - p * ch * 0.08;
-            ctx.lineWidth = current === 1 ? 1.4 : 0.7;
-            ctx.beginPath();
-            for (let x = -24; x <= cw + 24; x += 18) {
-              const y = baseY
-                + Math.sin(x * 0.007 + seconds * (0.22 + current * 0.025) + current * 1.7) * (12 + current * 5)
-                + Math.sin(x * 0.0026 - seconds * 0.14 + p * 9) * 15;
-              if (x === -24) ctx.moveTo(x, y);
-              else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-          }
-
-          if (modelStrength > 0.01) {
-            ctx.strokeStyle = "rgba(" + GOLD_RGB + "," + (0.18 * modelStrength) + ")";
-            ctx.lineWidth = 1;
-            for (let orbit = 0; orbit < 3; orbit++) {
-              ctx.beginPath();
-              ctx.ellipse(
-                cw / 2 + pointer.x * 22,
-                ch / 2 + pointer.y * 14,
-                Math.min(cw * 0.31, 420) + orbit * 38,
-                Math.min(ch * 0.13, 105) + orbit * 14,
-                seconds * (0.025 + orbit * 0.01),
-                0,
-                Math.PI * 2
-              );
-              ctx.stroke();
-            }
-          }
-
-          if (arrivalStrength > 0.01) {
-            const horizonY = ch * 0.72 + Math.sin(seconds * 0.3) * 3;
-            const horizon = ctx.createLinearGradient(0, 0, cw, 0);
-            horizon.addColorStop(0, "rgba(" + GOLD_RGB + ",0)");
-            horizon.addColorStop(0.5, "rgba(" + GOLD_RGB + "," + (0.34 * arrivalStrength) + ")");
-            horizon.addColorStop(1, "rgba(" + GOLD_RGB + ",0)");
-            ctx.strokeStyle = horizon;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, horizonY);
-            ctx.lineTo(cw, horizonY);
-            ctx.stroke();
-          }
-
+          line(-1.9 * u, -(h - 2.4) * u, 1.9 * u, -(h - 2.4) * u);
+          line(-1.5 * u, -(h - 1.2) * u, 1.5 * u, -(h - 1.2) * u);
           ctx.restore();
         }
 
@@ -2158,6 +2086,46 @@
           return 5;
         }
 
+        // ---- watermark text ----
+        function watermarkTextFor(p) {
+          if (p < 0.075) return "";
+          if (p < 0.19) return "RFS";
+          if (p < 0.35) return "SUNERGIES";
+          if (p < 0.40) return I18N[currentLang()]["wm.eco"] || "ECOSYSTEM";
+          if (p < 0.76) {
+            const idx = clamp(Math.floor((p - STATION_START) / STATION_STEP), 0, 9);
+            return UNIT_NAME[UNIT_ORDER[idx]].toUpperCase();
+          }
+          if (p < 0.785) return "SUNERGIES";
+          if (p < 0.83) return "2014";
+          if (p < 0.90) return "500+ MW";
+          return "RFS";
+        }
+        function currentLang() {
+          return document.documentElement.lang === "pt" ? "pt" : "en";
+        }
+
+        // ---- overlays ----
+        const ovHero = document.getElementById("ov-hero");
+        const ovManifesto = document.getElementById("ov-manifesto");
+        const ovModel = [
+          document.getElementById("ov-model-0"),
+          document.getElementById("ov-model-1"),
+          document.getElementById("ov-model-2"),
+        ];
+        const ovEcoIntro = document.getElementById("ov-eco-intro");
+        const ovFlagship = document.getElementById("ov-flagship");
+        const ovContact = document.getElementById("ov-contact");
+        function setOpacity(el, v) {
+          el.style.opacity = v;
+          el.style.pointerEvents = v > 0.4 ? "auto" : "none";
+          const inner = el.firstElementChild;
+          if (inner) {
+            inner.style.transform = "translate3d(0," + ((1 - v) * 22) + "px,0) scale(" + (0.985 + v * 0.015) + ")";
+            inner.style.filter = "blur(" + ((1 - v) * 5) + "px)";
+          }
+        }
+
         // ---- main loop ----
         let smoothProgress = 0;
         function loop(time) {
@@ -2168,22 +2136,36 @@
           pointer.y += (pointer.targetY - pointer.y) * 0.045;
           const p = smoothProgress;
           const camZ = p * TOTAL_DEPTH;
+          const sky = skyAt(p);
           const inGold = p > 0.76 && p < 0.90;
-
-          updateBg(p);
+          const goldMix = smoothstep(0.755, 0.795, p) * (1 - smoothstep(0.875, 0.915, p));
+          const strokeCol = [
+            lerp(GOLD[0], INK[0], goldMix),
+            lerp(GOLD[1], INK[1], goldMix),
+            lerp(GOLD[2], INK[2], goldMix),
+          ];
+          const stroke = (a) => rgba(strokeCol, a);
           document.documentElement.classList.toggle("gold-chapter", inGold);
 
+          // camera glance toward the current station
+          let glance = 0;
+          stations.forEach((s) => {
+            const e = envelope(p, s.center - 0.022, s.center - 0.010, s.center + 0.002, s.center + 0.014);
+            glance += e * (s.side === "left" ? 1 : -1);
+          });
+          horizonY = ch * 0.40 + pointer.y * 8;
+          focal = ch * 0.95;
+          pan = glance * cw * 0.11 + pointer.x * 12;
+
+          // chrome: watermark, header, rail, overlays
           const wt = watermarkTextFor(p);
           wmText.textContent = wt;
           wmText.parentElement.style.opacity = wt ? 1 : 0;
           wmText.style.transform = "translate3d(" + (-pointer.x * 16) + "px," + (-pointer.y * 10) + "px,0)";
           overlaysRoot.style.setProperty("--journey", p);
-
           expHeader.style.opacity = smoothstep(0.05, 0.09, p);
-
           const bucket = railBucket(p);
           railButtons.forEach((b, i) => b.classList.toggle("active", i === bucket));
-
           setOpacity(ovHero, 1 - smoothstep(0.055, 0.085, p));
           setOpacity(ovManifesto, envelope(p, 0.075, 0.10, 0.165, 0.19));
           setOpacity(ovModel[0], envelope(p, 0.195, 0.215, 0.235, 0.25));
@@ -2193,110 +2175,329 @@
           setOpacity(ovFlagship, envelope(p, 0.765, 0.785, 0.885, 0.90));
           setOpacity(ovContact, smoothstep(0.905, 0.925, p));
 
+          // ---- sky ----
           ctx.clearRect(0, 0, cw, ch);
-          drawSolarEnvironment(p, time, inGold);
+          const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY + 30);
+          skyGrad.addColorStop(0, rgba(sky.top, 1));
+          skyGrad.addColorStop(0.62, rgba(sky.mid, 1));
+          skyGrad.addColorStop(1, rgba(sky.hor, 1));
+          ctx.fillStyle = skyGrad;
+          ctx.fillRect(0, 0, cw, horizonY + 30);
 
-          // field particles
-          const sceneRGB = inGold ? INK_RGB : GOLD_RGB;
-          const sceneColor = inGold ? COLOR_INK : COLOR_GOLD;
-          const projected = field.map((particle) => projectParticle(particle, camZ, time));
-          ctx.lineWidth = 0.5;
-          for (const [i, j] of edges) {
-            const a = projected[i];
-            const b = projected[j];
-            if (!a || !b) continue;
-            const screenDistance = Math.hypot(a.sx - b.sx, a.sy - b.sy);
-            if (screenDistance > 190 || Math.abs(a.rel - b.rel) > 220) continue;
-            ctx.strokeStyle = sceneColor;
-            ctx.globalAlpha = 0.055 + Math.min(a.depth, b.depth) * 0.12;
-            ctx.beginPath();
-            ctx.moveTo(a.sx, a.sy);
-            ctx.lineTo(b.sx, b.sy);
-            ctx.stroke();
-          }
-          for (let i = 0; i < field.length; i++) {
-            const particle = field[i];
-            const proj = projected[i];
-            if (proj.sx < -30 || proj.sx > cw + 30 || proj.sy < -30 || proj.sy > ch + 30) continue;
-            const pulse = 0.62 + Math.sin(time * 0.001 * particle.twinkle + particle.phase) * 0.32;
-            const radius = clamp(particle.r * (0.62 + proj.scale * 5.5), 0.45, 5.5);
-            ctx.globalAlpha = particle.a * pulse * (0.28 + proj.depth * 0.9);
-            ctx.fillStyle = sceneColor;
-            ctx.beginPath();
-            ctx.arc(proj.sx, proj.sy, radius, 0, Math.PI * 2);
-            ctx.fill();
-            if (radius > 1.8) {
-              ctx.strokeStyle = "rgba(" + sceneRGB + ",.2)";
-              ctx.lineWidth = 0.7;
+          // stars
+          if (sky.stars > 0.02) {
+            ctx.fillStyle = "#f4eeda";
+            for (const st of stars) {
+              const sy = st.ny * ch;
+              if (sy > horizonY - 14) continue;
+              const twinkle = 0.55 + Math.sin(time * 0.001 * st.tw + st.phase) * 0.45;
+              ctx.globalAlpha = sky.stars * twinkle * 0.8;
               ctx.beginPath();
-              ctx.arc(proj.sx, proj.sy, radius * 2.4, 0, Math.PI * 2);
-              ctx.stroke();
+              ctx.arc(st.nx * cw + pan * 0.05, sy, st.r, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          // clouds near the horizon, catching the dawn
+          for (const cl of clouds) {
+            const cx = ((cl.nx + time * cl.drift) % 1.25 - 0.12) * cw + pan * 0.12;
+            const cy = cl.ny * ch + (horizonY - ch * 0.40);
+            ctx.globalAlpha = 0.05 + sky.glow * 0.11;
+            ctx.fillStyle = rgba([sky.hor[0] + 40, sky.hor[1] + 30, sky.hor[2] + 15], 1);
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, cl.w * cw, cl.h * ch, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+
+          // ---- the sun, rising dead ahead ----
+          const sunRise = smoothstep(0.60, 0.795, p);
+          const sunFade = 1 - smoothstep(0.885, 0.935, p);
+          const sunX = cw / 2 + pan * 0.35;
+          const sunY = horizonY + ch * (0.055 - sunRise * 0.215);
+          const sunR = ch * (0.045 + sunRise * 0.085);
+          if (sunFade > 0.01) {
+            const glowR = sunR * (3.2 + sky.glow * 2.5);
+            const halo = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, glowR);
+            halo.addColorStop(0, rgba([255, 225, 130], (0.10 + sky.glow * 0.30) * sunFade));
+            halo.addColorStop(0.5, rgba([230, 170, 60], (0.05 + sky.glow * 0.14) * sunFade));
+            halo.addColorStop(1, "rgba(230,170,60,0)");
+            ctx.fillStyle = halo;
+            ctx.fillRect(0, 0, cw, horizonY + 30);
+            const disc = smoothstep(0.55, 0.70, p);
+            if (disc > 0.01) {
+              ctx.globalAlpha = disc * sunFade;
+              ctx.fillStyle = rgba([255, 232, 150], 0.95);
+              ctx.beginPath();
+              ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.globalAlpha = 1;
+            }
+          }
+          // arrival: the sun settles into the RFS dome mark on the horizon
+          const domeK = smoothstep(0.93, 0.97, p);
+          if (domeK > 0.01) {
+            const dr = ch * 0.035;
+            ctx.globalAlpha = domeK;
+            ctx.fillStyle = COLOR_GOLD;
+            ctx.beginPath();
+            ctx.arc(cw / 2 + pan * 0.35, horizonY, dr, Math.PI, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillRect(cw / 2 + pan * 0.35 - dr * 1.5, horizonY + dr * 0.34, dr * 3, Math.max(1.5, dr * 0.1));
+            ctx.globalAlpha = 1;
+          }
+
+          // ---- ground ----
+          const groundGrad = ctx.createLinearGradient(0, horizonY, 0, ch);
+          groundGrad.addColorStop(0, rgba(sky.ground, 1));
+          groundGrad.addColorStop(1, rgba([sky.ground[0] * 0.4, sky.ground[1] * 0.4, sky.ground[2] * 0.4], 1));
+          ctx.fillStyle = groundGrad;
+          ctx.fillRect(0, horizonY, cw, ch - horizonY);
+          ctx.strokeStyle = rgba(sky.hor, 0.5);
+          ctx.lineWidth = 1;
+          line(0, horizonY, cw, horizonY);
+
+          // ---- the road ----
+          const near = project(0, 0, camZ + 10, camZ);
+          const farP = project(0, 0, camZ + DRAW_DIST, camZ);
+          const edgeL1 = project(-ROAD_W, 0, camZ + 10, camZ);
+          const edgeR1 = project(ROAD_W, 0, camZ + 10, camZ);
+          const edgeL2 = project(-ROAD_W, 0, camZ + DRAW_DIST, camZ);
+          const edgeR2 = project(ROAD_W, 0, camZ + DRAW_DIST, camZ);
+          if (near && farP && edgeL1 && edgeR1 && edgeL2 && edgeR2) {
+            ctx.fillStyle = rgba(sky.road, 0.92);
+            ctx.beginPath();
+            ctx.moveTo(edgeL1.sx, edgeL1.sy);
+            ctx.lineTo(edgeL2.sx, edgeL2.sy);
+            ctx.lineTo(edgeR2.sx, edgeR2.sy);
+            ctx.lineTo(edgeR1.sx, edgeR1.sy);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = stroke(0.75);
+            ctx.lineWidth = clamp(ch * 0.0022, 1, 2.4);
+            line(edgeL1.sx, edgeL1.sy, edgeL2.sx, edgeL2.sy);
+            line(edgeR1.sx, edgeR1.sy, edgeR2.sx, edgeR2.sy);
+            // center dashes, anchored to the world so they stream past
+            ctx.strokeStyle = stroke(0.85);
+            for (let k = Math.ceil((camZ + 10) / 16); k * 16 < camZ + 700; k++) {
+              const a = project(0, 0, k * 16, camZ);
+              const b = project(0, 0, k * 16 + 7, camZ);
+              if (!a || !b) continue;
+              ctx.lineWidth = clamp(0.16 * a.u, 0.8, 4);
+              line(a.sx, a.sy, b.sx, b.sy);
+            }
+            ctx.globalAlpha = 0.5;
+            ctx.lineWidth = 1;
+            const c700 = project(0, 0, camZ + 700, camZ);
+            if (c700) line(c700.sx, c700.sy, farP.sx, farP.sy);
+            ctx.globalAlpha = 1;
+          }
+
+          // reflector posts along the shoulders
+          ctx.fillStyle = stroke(1);
+          for (let k = Math.ceil((camZ + 12) / 60); k * 60 < camZ + 620; k++) {
+            for (const sideX of [-(ROAD_W + 0.55), ROAD_W + 0.55]) {
+              const b = project(sideX, 0, k * 60, camZ);
+              const t = project(sideX, 0.8, k * 60, camZ);
+              if (!b || !t) continue;
+              const a = clamp(1.25 - b.rel / 520, 0, 1);
+              ctx.globalAlpha = a * 0.5;
+              ctx.strokeStyle = stroke(0.5);
+              ctx.lineWidth = clamp(0.07 * b.u, 0.5, 1.5);
+              line(b.sx, b.sy, t.sx, t.sy);
+              ctx.globalAlpha = a * (0.65 + Math.sin(time * 0.004 + k) * 0.2);
+              ctx.beginPath();
+              ctx.arc(t.sx, t.sy, clamp(0.1 * b.u, 0.8, 2.6), 0, Math.PI * 2);
+              ctx.fill();
             }
           }
           ctx.globalAlpha = 1;
 
-          // unit nodes: marker, leader line, DOM card position
-          unitNodes.forEach((node) => {
+          // km marker plates (100 world units = 1 km)
+          for (let k = Math.ceil((camZ + 12) / 250); k * 250 < camZ + 900; k++) {
+            const z = k * 250;
+            const b = project(-(ROAD_W + 1.8), 0, z, camZ);
+            if (!b) continue;
+            const u = b.u;
+            const a = clamp(1.15 - b.rel / 620, 0, 1) * 0.85;
+            ctx.strokeStyle = stroke(a);
+            ctx.globalAlpha = a;
+            ctx.lineWidth = clamp(0.08 * u, 0.5, 1.6);
+            ctx.save();
+            ctx.translate(b.sx, b.sy);
+            line(0, 0, 0, -1.7 * u);
+            ctx.strokeRect(-0.9 * u, -2.9 * u, 1.8 * u, 1.2 * u);
+            if (u > 7) {
+              ctx.fillStyle = stroke(a);
+              ctx.font = "700 " + (0.52 * u) + "px Archivo, system-ui, sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText("KM " + Math.round(z / 100), 0, -2.05 * u);
+            }
+            ctx.restore();
+          }
+          ctx.globalAlpha = 1;
+
+          // grass tufts swaying at the roadside
+          ctx.lineWidth = 1;
+          for (let k = Math.ceil((camZ + 12) / 24); k * 24 < camZ + 420; k++) {
+            const gx = (7 + prnd(k) * 30) * (prnd(k + 0.5) > 0.5 ? 1 : -1);
+            const b = project(gx, 0, k * 24, camZ);
+            if (!b || b.u < 2.5 || b.sx < -40 || b.sx > cw + 40) continue;
+            const h = (0.5 + prnd(k + 1) * 1.1) * b.u;
+            const sway = Math.sin(time * 0.0012 + k * 1.3) * 0.16 * h;
+            ctx.strokeStyle = stroke(clamp(0.9 - b.rel / 380, 0, 0.4));
+            for (let bl = -1; bl <= 1; bl++) {
+              ctx.beginPath();
+              ctx.moveTo(b.sx + bl * h * 0.12, b.sy);
+              ctx.quadraticCurveTo(
+                b.sx + bl * h * 0.18, b.sy - h * 0.6,
+                b.sx + bl * h * 0.3 + sway, b.sy - h
+              );
+              ctx.stroke();
+            }
+          }
+
+          // ---- far-to-near scenery: pylons + wires, gantry, stations ----
+          const drawables = [];
+          pylons.forEach((py, i) => {
+            const proj = project(py.x, 0, py.z, camZ);
+            if (!proj) return;
+            drawables.push({
+              rel: proj.rel,
+              draw: () => {
+                const a = clamp((DRAW_DIST - proj.rel) / (DRAW_DIST * 0.45), 0, 1) * 0.55;
+                drawPylon(proj, py.h, stroke(1), a);
+                const nxt = pylons[i + 2];
+                if (nxt) {
+                  const np = project(nxt.x, 0, nxt.z, camZ);
+                  if (np) {
+                    ctx.strokeStyle = stroke(1);
+                    ctx.globalAlpha = a * 0.6;
+                    ctx.lineWidth = 0.7;
+                    for (const dy of [2.4, 1.2]) {
+                      ctx.beginPath();
+                      ctx.moveTo(proj.sx, proj.sy - (py.h - dy) * proj.u);
+                      ctx.quadraticCurveTo(
+                        (proj.sx + np.sx) / 2, (proj.sy - (py.h - dy) * proj.u + np.sy - (nxt.h - dy) * np.u) / 2 + 8,
+                        np.sx, np.sy - (nxt.h - dy) * np.u
+                      );
+                      ctx.stroke();
+                    }
+                    ctx.globalAlpha = 1;
+                  }
+                }
+              },
+            });
+          });
+          const gp = project(0, 0, GANTRY_Z, camZ);
+          if (gp) {
+            drawables.push({
+              rel: gp.rel,
+              draw: () => {
+                const u = gp.u;
+                const a = clamp((DRAW_DIST - gp.rel) / (DRAW_DIST * 0.4), 0, 1) * 0.9;
+                ctx.strokeStyle = stroke(a);
+                ctx.lineWidth = clamp(0.12 * u, 0.7, 2.4);
+                ctx.save();
+                ctx.translate(gp.sx, gp.sy);
+                line(-8 * u, 0, -8 * u, -7 * u);
+                line(8 * u, 0, 8 * u, -7 * u);
+                line(-8.6 * u, -7 * u, 8.6 * u, -7 * u);
+                line(-8.6 * u, -6.6 * u, 8.6 * u, -6.6 * u);
+                ctx.strokeRect(-5.4 * u, -6.4 * u, 10.8 * u, 2.5 * u);
+                if (u > 4) {
+                  ctx.fillStyle = stroke(a);
+                  ctx.font = "800 " + (1.15 * u) + "px Archivo, system-ui, sans-serif";
+                  ctx.textAlign = "center";
+                  ctx.fillText(I18N[currentLang()]["wm.eco"] || "ECOSYSTEM", 0, -4.7 * u);
+                }
+                ctx.restore();
+              },
+            });
+          }
+          stations.forEach((node) => {
+            const base = project(node.x, 0, node.z, camZ);
+            if (!base) {
+              node.card.style.opacity = 0;
+              return;
+            }
+            drawables.push({
+              rel: base.rel,
+              draw: () => {
+                const a = clamp((720 - base.rel) / 300, 0, 1) * clamp((base.rel - 12) / 26, 0, 1);
+                if (a <= 0.01) return;
+                ctx.save();
+                ctx.translate(base.sx, base.sy);
+                ctx.scale(node.dir, 1);
+                ctx.strokeStyle = stroke(a * 0.95);
+                ctx.fillStyle = stroke(a * 0.95);
+                ctx.globalAlpha = a;
+                ctx.lineWidth = clamp(0.1 * base.u, 0.6, 2.2);
+                SCENE_DRAW[node.key](base.u, time);
+                ctx.restore();
+                ctx.globalAlpha = 1;
+              },
+            });
+          });
+          drawables.sort((a, b) => b.rel - a.rel);
+          drawables.forEach((d) => d.draw());
+
+          // ---- headlight pool on the road at night ----
+          const nightK = sky.stars;
+          if (nightK > 0.02) {
+            const hl = ctx.createRadialGradient(cw / 2 + pan * 0.2, ch * 1.02, 0, cw / 2 + pan * 0.2, ch * 1.02, ch * 0.8);
+            hl.addColorStop(0, rgba(GOLD, 0.11 * nightK));
+            hl.addColorStop(1, "rgba(212,175,55,0)");
+            ctx.fillStyle = hl;
+            ctx.fillRect(0, horizonY, cw, ch - horizonY);
+          }
+
+          // ---- vignette ----
+          const vg = ctx.createRadialGradient(cw / 2, ch * 0.45, ch * 0.3, cw / 2, ch * 0.45, Math.max(cw, ch) * 0.78);
+          vg.addColorStop(0, "rgba(0,0,0,0)");
+          vg.addColorStop(1, "rgba(0,0,0," + (0.10 + nightK * 0.26) + ")");
+          ctx.fillStyle = vg;
+          ctx.fillRect(0, 0, cw, ch);
+
+          // ---- unit info cards, tied to their structures ----
+          stations.forEach((node) => {
             const e = envelope(p, node.inStart, node.inEnd, node.outStart, node.outEnd);
-            const proj = project(node.x, node.y, node.z, camZ);
+            const proj = project(node.x, 5, node.z, camZ);
             if (!proj || e <= 0.01) {
               node.card.style.opacity = 0;
               return;
             }
-            const pulse = 0.9 + Math.sin(time * 0.004 + node.index * 0.8) * 0.1;
-            const radius = clamp(4 * proj.scale, 3, 22) * pulse;
-            const grad = ctx.createRadialGradient(proj.sx, proj.sy, 0, proj.sx, proj.sy, radius * 2.4);
-            grad.addColorStop(0, COLOR_GOLD);
-            grad.addColorStop(1, "transparent");
-            ctx.globalAlpha = e;
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(proj.sx, proj.sy, radius * 2.4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = COLOR_GOLD;
-            ctx.beginPath();
-            ctx.arc(proj.sx, proj.sy, Math.max(2, radius * 0.5), 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = COLOR_GOLD;
-            ctx.globalAlpha = e * 0.38;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(proj.sx, proj.sy, radius * (1.8 + Math.sin(time * 0.002 + node.index) * 0.2), 0, Math.PI * 2);
-            ctx.stroke();
-
             const cardW = isMobile ? 240 : 300;
             let anchorX, cardY, lineEndX, lineEndY;
             if (isMobile) {
               anchorX = (cw - cardW) / 2;
-              cardY = clamp(proj.sy - 175, 118, ch - 220);
+              cardY = clamp(proj.sy - 195, 118, ch - 230);
               lineEndX = cw / 2;
-              lineEndY = cardY + 120;
+              lineEndY = cardY + 130;
             } else {
               if (node.side === "left") {
-                anchorX = clamp(proj.sx - 30 - cardW, 24, cw - 24 - cardW);
+                anchorX = clamp(proj.sx + 40, 24, cw - 24 - cardW);
+                lineEndX = anchorX;
               } else {
-                anchorX = clamp(proj.sx + 30, 24, cw - 24 - cardW);
+                anchorX = clamp(proj.sx - 40 - cardW, 24, cw - 24 - cardW);
+                lineEndX = anchorX + cardW;
               }
-              lineEndX = node.side === "left" ? anchorX + cardW : anchorX;
-              lineEndY = clamp(proj.sy, 90, ch - 90);
+              lineEndY = clamp(proj.sy - 30, 90, ch - 90);
               cardY = lineEndY - 40;
             }
-
-            ctx.strokeStyle = COLOR_GOLD;
+            ctx.strokeStyle = stroke(0.6);
             ctx.globalAlpha = e * 0.6;
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(proj.sx, proj.sy);
-            ctx.lineTo(lineEndX, lineEndY);
-            ctx.stroke();
+            line(proj.sx, proj.sy, lineEndX, lineEndY);
             const flow = (time * 0.00022 + node.index * 0.13) % 1;
             ctx.globalAlpha = e * 0.9;
-            ctx.fillStyle = COLOR_GOLD;
+            ctx.fillStyle = stroke(1);
             ctx.beginPath();
             ctx.arc(proj.sx + (lineEndX - proj.sx) * flow, proj.sy + (lineEndY - proj.sy) * flow, 1.6, 0, Math.PI * 2);
             ctx.fill();
             ctx.globalAlpha = 1;
-
             const cardFloat = Math.sin(time * 0.0014 + node.index) * 3;
             node.card.style.transform = "translate(" + anchorX + "px, " + (cardY + cardFloat) + "px)";
             node.card.style.opacity = e;
