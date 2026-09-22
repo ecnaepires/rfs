@@ -3,8 +3,8 @@
 Generated for RFS in the owner's Higgsfield account on 8–9 Sep 2026 (two re-shot 22 Sep)
 (start frames: Nano Banana Flash; motion: Kling 3.0, 1080p pro, no audio).
 Masters (2212×936, 24 fps) are kept on the VPS at `/opt/rfs-footage-src/`;
-the files here are 1280-wide H.264 re-encodes with a 6-frame GOP so the
-page can seek them smoothly while scrolling.
+the files here are stabilised (vidstab), motion-interpolated to 60 fps and
+re-encoded at 1280 wide with a 12-frame GOP — see smooth.sh.
 
 | File | Chapter | Higgsfield generation id |
 |---|---|---|

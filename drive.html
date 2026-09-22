@@ -30,7 +30,7 @@
       #stage { position: fixed; inset: 0; overflow: hidden; background: #000 center / cover no-repeat; }
       #stage video {
         position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-        opacity: 0; transition: opacity .6s ease;
+        opacity: 0; transition: opacity .9s ease-in-out;
       }
       #stage video.active { opacity: 1; }
       #stage::after {
@@ -349,8 +349,9 @@
       ];
 
       const HOLD = 7;          // seconds a stop waits before driving on (cruise)
-      const FAST = 2;          // playback rate on the straight road between stops
+      const FAST = 1.6;        // playback rate on the straight road between stops
       const APPROACH = 3.2;    // seconds before a stop that play drops to 1x
+      const BRAKE = 1.4;       // last seconds before a stop: ease down to a crawl
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
       const $ = (s) => document.querySelector(s);
@@ -420,6 +421,7 @@
       let paused = false;      // user pause (whole drive)
       let cruise = !reduced;   // auto-continue from stops
       let rateMult = 1;        // 1x / 2x button
+      let rateNow = 1;         // eased playback rate actually applied
       let holdLeft = HOLD;
       let lastTs = 0;
       let stopDone = false;    // the current clip's stop has been served
@@ -441,7 +443,7 @@
           setTimeout(() => {
             if (token !== switchToken) return;
             CLIPS.forEach((k) => { if (k !== c) { k.video.classList.remove("active"); if (!k.video.paused) k.video.pause(); } });
-          }, 650);
+          }, 950);
           if (!paused) v.play().catch(() => {});
         };
         if (v.readyState >= 1) start(); else v.addEventListener("loadedmetadata", start, { once: true });
@@ -465,6 +467,8 @@
         if (state !== "stop") return;
         hideCard();
         state = "drive";
+        rateNow = 0.3;  // pull away gently from the stop
+        CLIPS[cur].video.playbackRate = rateNow;
         if (!paused) CLIPS[cur].video.play().catch(() => {});
         if (CLIPS[cur].kind === "flagship") renderTitle(true, false);
       }
@@ -619,17 +623,27 @@
           const t = v.currentTime;
 
           if (state === "drive") {
-            // speed: 2x on the straight road, 1x approaching / at a stop
+            // speed: faster on the straight road, 1x approaching a stop, and a
+            // gentle brake over the last BRAKE seconds. The actual rate eases
+            // toward the target so there are no sudden jumps in speed.
             let r = c.rate || 1;
-            if (c.stop != null) r = (!stopDone && t > c.stop - APPROACH) || (stopDone && t < c.stop + 1.2) ? 1 : FAST;
+            if (c.stop != null) {
+              if (!stopDone) {
+                const toStop = c.stop - t;
+                if (toStop < BRAKE) r = 0.3 + 0.7 * (toStop / BRAKE);
+                else if (toStop < APPROACH) r = 1;
+                else r = FAST;
+              } else r = t < c.stop + 1.5 ? 1 : FAST;
+            }
             r *= rateMult;
-            if (Math.abs(v.playbackRate - r) > 0.01) v.playbackRate = r;
+            rateNow += (r - rateNow) * Math.min(1, dt * 2.2);
+            if (Math.abs(v.playbackRate - rateNow) > 0.005) v.playbackRate = Math.max(0.25, rateNow);
             // a play() can be swallowed by a load/seek racing it; keep the car moving
             if (!paused && v.paused && !v.seeking && v.readyState >= 2 && !v.ended) v.play().catch(() => {});
             if (v.readyState >= 2 && !v.classList.contains("active")) v.classList.add("active");
 
             if (c.stop != null && !stopDone && t >= c.stop) enterStop();
-            else if (v.duration && t >= v.duration - 0.25) {
+            else if (v.duration && t >= v.duration - 0.5) {
               if (cur < CLIPS.length - 1) setActive(cur + 1, 0);
               else v.pause();
             }
