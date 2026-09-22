@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFS — The Road (footage preview)</title>
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet" />
+    <style>
+      /* Footage preview of "The Road": the Higgsfield / Kling 3.0 drive clips
+         (9 Sep 2026) scrubbed by scroll. Standalone — index.html is untouched. */
+      :root {
+        --gold: #d4af37;
+        --ink: #000;
+        --paper: oklch(96% 0.01 90);
+        --muted: oklch(80% 0.02 90);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; background: var(--ink); color: var(--paper); }
+      body { font-family: "Archivo", system-ui, sans-serif; }
+      #track { position: relative; }
+      #stage { position: fixed; inset: 0; overflow: hidden; background: #000; }
+      #stage video {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover; opacity: 0; transition: none;
+      }
+      #stage::after { /* legibility vignette */
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background:
+          linear-gradient(to bottom, rgb(0 0 0 / .55), transparent 22%, transparent 62%, rgb(0 0 0 / .7)),
+          radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / .35));
+      }
+
+      header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 5;
+        display: flex; align-items: center; gap: 12px; padding: 18px 24px;
+      }
+      header img { height: 30px; }
+      header .name { font-stretch: 125%; font-weight: 800; letter-spacing: .14em; font-size: 13px; color: var(--gold); }
+      header .badge {
+        margin-left: auto; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+        border: 1px solid rgb(212 175 55 / .5); color: var(--gold); padding: 5px 10px; border-radius: 99px;
+      }
+
+      .ov {
+        position: fixed; z-index: 4; pointer-events: none;
+        opacity: 0; transform: translateY(14px);
+        transition: opacity .45s ease, transform .45s ease;
+      }
+      .ov.on { opacity: 1; transform: none; }
+      .ov-center { left: 50%; top: 50%; width: min(880px, 90vw); translate: -50% -50%; text-align: center; }
+      .ov-center h1, .ov-center h2 {
+        margin: 0; font-stretch: 125%; font-weight: 800; line-height: 1.02;
+        font-size: clamp(34px, 6vw, 84px); letter-spacing: -.01em; text-wrap: balance;
+        text-shadow: 0 2px 30px rgb(0 0 0 / .5);
+      }
+      .ov-center::before { /* soft dark pool so text holds on bright footage */
+        content: ""; position: absolute; inset: -12% -8%; z-index: -1;
+        background: radial-gradient(closest-side, rgb(0 0 0 / .72), transparent);
+      }
+      .ov-center p { margin: 18px auto 0; max-width: 620px; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.5; color: var(--paper); font-weight: 500; text-shadow: 0 1px 3px rgb(0 0 0 / .9), 0 0 18px rgb(0 0 0 / .7); }
+      .ov-center .kicker { display: block; margin-bottom: 14px; font-size: 12px; font-weight: 700; letter-spacing: .3em; color: var(--gold); }
+
+      .card {
+        bottom: 9vh; width: min(380px, calc(100vw - 32px));
+        padding: 22px 24px; border-left: 2px solid var(--gold);
+        background: rgb(0 0 0 / .52); backdrop-filter: blur(6px);
+      }
+      .card.left { left: 5vw; }
+      .card.right { right: 5vw; }
+      .card .num { font-size: 11px; letter-spacing: .24em; color: var(--gold); font-weight: 700; }
+      .card .n { display: block; margin-top: 8px; font-stretch: 118%; font-weight: 800; font-size: 28px; line-height: 1.05; }
+      .card .t { display: block; margin-top: 4px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+      .card p { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+
+      #rail {
+        position: fixed; z-index: 5; right: 18px; top: 50%; translate: 0 -50%;
+        display: flex; flex-direction: column; gap: 7px;
+      }
+      #rail button {
+        width: 9px; height: 9px; padding: 0; border-radius: 50%; cursor: pointer;
+        border: 1px solid var(--gold); background: transparent;
+      }
+      #rail button.on { background: var(--gold); }
+      #rail button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+      #cue {
+        position: fixed; z-index: 4; left: 50%; bottom: 26px; translate: -50% 0;
+        font-size: 11px; letter-spacing: .3em; color: var(--gold); transition: opacity .4s;
+      }
+      #loading {
+        position: fixed; z-index: 6; left: 24px; bottom: 22px; font-size: 11px;
+        letter-spacing: .14em; color: var(--muted);
+      }
+      #clipinfo {
+        position: fixed; z-index: 5; left: 24px; bottom: 22px; font: 11px/1.4 ui-monospace, monospace;
+        color: rgb(255 255 255 / .55);
+      }
+      @media (max-width: 700px) {
+        .card, .card.left, .card.right { left: 16px; right: 16px; width: auto; bottom: 12vh; }
+        #rail { right: 8px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .ov { transition: none; transform: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage" aria-hidden="true"></div>
+    <header>
+      <img src="assets/logo.svg" alt="RFS" />
+      <span class="name">RFS HOLDING GROUP</span>
+      <span class="badge">Footage preview</span>
+    </header>
+    <nav id="rail" aria-label="Chapters"></nav>
+    <div id="overlays"></div>
+    <div id="cue">SCROLL</div>
+    <div id="loading">Loading footage…</div>
+    <div id="clipinfo"></div>
+    <main id="track"></main>
+
+    <script>
+      // Each clip gets a slice of the scroll track proportional to its length.
+      // SCROLL_PER_SEC = viewport-heights of scrolling per second of footage.
+      const SCROLL_PER_SEC = 0.55;
+      const CLIPS = [
+        { f: "00-opener", d: 14, kind: "hero",
+          h: "Building the future of energy.",
+          p: "Long-horizon governance for an integrated energy ecosystem in Brazil.", kicker: "RFS HOLDING GROUP" },
+        { f: "01-pylons", d: 10, kind: "center",
+          h: "One holding. An ecosystem of energy.",
+          p: "Built to operate for decades, not quarters." },
+        { f: "02-usinas", d: 12, side: "left", n: "Usinas de Investimento", t: "Generation",
+          p: "Develops and holds power-generation assets — the base layer of the ecosystem." },
+        { f: "03-sungov", d: 12, side: "right", n: "SunGov Deals", t: "Government",
+          p: "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector." },
+        { f: "04-sunnews", d: 12, side: "left", n: "Sun News", t: "Media",
+          p: "News, blog, internal communications and podcast — the voice of the ecosystem." },
+        { f: "05-suncashback", d: 12, side: "right", n: "SunCashback", t: "Benefits",
+          p: "Cashback, benefits and incentives that can convert into discounts or new investments." },
+        { f: "06-sunlife", d: 12, side: "left", n: "SunLife", t: "Health",
+          p: "Health plans, telemedicine and medical services for the group's network." },
+        { f: "07-substation", d: 10, kind: "center",
+          h: "One strategic center. One operating platform.",
+          p: "Multiple routes to market." },
+        { f: "08-sunpower", d: 12, side: "right", n: "SunPower Deals", t: "Corporate",
+          p: "Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants." },
+        { f: "09-sunsquad", d: 12, side: "left", n: "SunSquad", t: "Partners",
+          p: "The group's partner-development arm, connecting its network, referral programs and mentorship." },
+        { f: "10-sunchargers", d: 12, side: "right", n: "SunChargers", t: "Mobility",
+          p: "An EV-charging network and convenience concept integrated with clean energy." },
+        { f: "11-sundex", d: 12, side: "left", n: "Sundex", t: "Digital",
+          p: "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity." },
+        { f: "12-pdi", d: 12, side: "right", n: "P&DI", t: "Innovation",
+          p: "Research, development, education and carbon-credit initiatives for the energy transition." },
+        { f: "13-flagship", d: 10, kind: "center", kicker: "FLAGSHIP",
+          h: "Sunergies",
+          p: "Since 2014, Sunergies has structured and executed solar projects end-to-end — modeling, execution, grid approval and operation — with more than 500 MW across Brazil." },
+        { f: "14-night", d: 12, kind: "center", kicker: "RFS HOLDING GROUP",
+          h: "Built for the long horizon.",
+          p: "Contact details to be confirmed by the owner." },
+      ];
+
+      const stage = document.getElementById("stage");
+      const overlays = document.getElementById("overlays");
+      const rail = document.getElementById("rail");
+      const cue = document.getElementById("cue");
+      const loading = document.getElementById("loading");
+      const clipinfo = document.getElementById("clipinfo");
+      const debug = new URLSearchParams(location.search).has("debug");
+
+      // ---- build scroll track + per-clip elements ----
+      let acc = 0;
+      let unitNo = 0;
+      CLIPS.forEach((c, i) => {
+        c.start = acc; acc += c.d; c.end = acc;
+
+        const v = document.createElement("video");
+        v.muted = true; v.playsInline = true; v.preload = i < 3 ? "auto" : "metadata";
+        v.poster = "assets/video/" + c.f + ".jpg";
+        v.src = "assets/video/" + c.f + ".mp4";
+        stage.appendChild(v);
+        c.video = v;
+
+        const ov = document.createElement("div");
+        if (c.side) {
+          unitNo++;
+          ov.className = "ov card " + c.side;
+          ov.innerHTML = '<span class="num">' + String(unitNo).padStart(2, "0") + ' / 10</span>' +
+            '<span class="n"></span><span class="t"></span><p></p>';
+          ov.querySelector(".n").textContent = c.n;
+          ov.querySelector(".t").textContent = c.t;
+          ov.querySelector("p").textContent = c.p;
+        } else {
+          ov.className = "ov ov-center";
+          ov.innerHTML = (c.kicker ? '<span class="kicker"></span>' : "") +
+            (c.kind === "hero" ? "<h1></h1>" : "<h2></h2>") + "<p></p>";
+          if (c.kicker) ov.querySelector(".kicker").textContent = c.kicker;
+          ov.querySelector("h1, h2").textContent = c.h;
+          ov.querySelector("p").textContent = c.p;
+        }
+        overlays.appendChild(ov);
+        c.ov = ov;
+
+        const b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("aria-label", c.n || c.h);
+        b.title = c.n || c.h;
+        b.addEventListener("click", () => scrollToTime(c.start + 0.05 * c.d));
+        rail.appendChild(b);
+        c.btn = b;
+      });
+      const TOTAL = acc;
+      const track = document.getElementById("track");
+      track.style.height = (TOTAL * SCROLL_PER_SEC * 100 + 100) + "vh";
+
+      function scrollMax() { return document.documentElement.scrollHeight - innerHeight; }
+      function timeFromScroll() { return (scrollY / Math.max(1, scrollMax())) * TOTAL; }
+      function scrollToTime(t) {
+        scrollTo({ top: (t / TOTAL) * scrollMax(), behavior: "smooth" });
+      }
+
+      // ---- loading indicator ----
+      let ready = 0;
+      CLIPS.forEach((c) => c.video.addEventListener("loadeddata", () => {
+        ready++;
+        loading.textContent = "Loading footage… " + ready + "/" + CLIPS.length;
+        if (ready >= 3) loading.style.display = "none";
+      }, { once: true }));
+
+      // ---- render loop: lerp toward scroll target, seek the active clip ----
+      const FADE = 0.45; // seconds of crossfade at each clip boundary
+      let cur = 0;
+      let lastIdx = -1;
+      function frame() {
+        const target = timeFromScroll();
+        cur += (target - cur) * 0.12;
+        if (Math.abs(target - cur) < 0.002) cur = target;
+        const t = Math.min(Math.max(cur, 0), TOTAL - 0.001);
+
+        let idx = CLIPS.findIndex((c) => t >= c.start && t < c.end);
+        if (idx < 0) idx = CLIPS.length - 1;
+        const c = CLIPS[idx];
+        const local = t - c.start;
+
+        CLIPS.forEach((k, i) => {
+          let o = 0;
+          if (i === idx) o = 1;
+          // fade the next clip in over the tail of the current one
+          if (i === idx + 1 && local > c.d - FADE) o = (local - (c.d - FADE)) / FADE;
+          k.video.style.opacity = o;
+          if (o > 0) {
+            const lt = i === idx ? local : 0;
+            const want = Math.min(lt, (k.video.duration || k.d) - 0.05);
+            if (Math.abs(k.video.currentTime - want) > 0.03 && !k.video.seeking) k.video.currentTime = want;
+          }
+          // keep neighbours buffered
+          if (Math.abs(i - idx) <= 1 && k.video.preload !== "auto") k.video.preload = "auto";
+
+          // overlay timing: centre text through the middle, unit card during the glance
+          const kl = t - k.start;
+          const on = k.side
+            ? (i === idx && kl > k.d * 0.28 && kl < k.d * 0.8)
+            : (i === idx && kl >= (k.kind === "hero" ? 0 : k.d * 0.15) && kl < k.d * 0.78);
+          k.ov.classList.toggle("on", on);
+          k.btn.classList.toggle("on", i === idx);
+        });
+
+        if (idx !== lastIdx) {
+          lastIdx = idx;
+          if (debug) clipinfo.textContent = c.f + ".mp4";
+        }
+        cue.style.opacity = t < 1.5 ? 1 : 0;
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>
