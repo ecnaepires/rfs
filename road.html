@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFS — The Road</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="assets/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet" />
+    <style>
+      /* "The Road", v3 — a road drawn in gold light; destinations that are real.
+         The highway, sky and sun are rendered live on a canvas (never glitches,
+         pure brand: black is the room, gold is the light). At each company the
+         drawing develops into a photograph of the building, then dissolves back
+         and the drive goes on. Self-driving with stops; scroll / arrows / tap
+         step between stops. */
+      :root {
+        --gold: #d4af37;
+        --gold-dim: rgb(212 175 55 / .45);
+        --ink: #000;
+        --panel: rgb(6 6 8 / .8);
+        --paper: oklch(96% 0.01 90);
+        --muted: oklch(80% 0.02 90);
+        --ease: cubic-bezier(.2, .7, .2, 1);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); }
+      body { font-family: "Archivo", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+      button { font: inherit; color: inherit; }
+
+      #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+      /* the photograph that the drawing develops into */
+      #photo {
+        position: fixed; inset: 0; overflow: hidden; opacity: 0; pointer-events: none;
+        transition: opacity 1.6s ease;
+      }
+      #photo.on { opacity: 1; }
+      #photo img {
+        position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover;
+        transform-origin: 50% 55%;
+      }
+      #photo.on img { animation: drift 14s ease-out forwards; }
+      @keyframes drift { from { transform: scale(1.08) translateY(1.5%); } to { transform: scale(1) translateY(0); } }
+      #photo::after {
+        content: ""; position: absolute; inset: 0;
+        background:
+          linear-gradient(to bottom, rgb(0 0 0 / .55), transparent 22%, transparent 62%, rgb(0 0 0 / .72)),
+          radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / .45));
+      }
+      /* gold "developing" flash as the photo comes in */
+      #develop {
+        position: fixed; inset: 0; pointer-events: none; opacity: 0;
+        background: radial-gradient(ellipse at 50% 45%, rgb(212 175 55 / .35), transparent 60%);
+      }
+      #develop.on { animation: develop 1.4s ease-out; }
+      @keyframes develop { 0% { opacity: 0; } 25% { opacity: 1; } 100% { opacity: 0; } }
+
+      /* ---------- header ---------- */
+      header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+        display: flex; align-items: center; gap: 8px; padding: 16px 22px;
+      }
+      header .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+      header img { height: 28px; }
+      header .name { font-stretch: 125%; font-weight: 800; letter-spacing: .14em; font-size: 12px; color: var(--gold); }
+      .hbtn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; min-width: 32px; padding: 0 12px;
+        font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+        background: rgb(0 0 0 / .4); border: 1px solid var(--gold-dim); border-radius: 99px;
+        color: var(--paper); cursor: pointer; backdrop-filter: blur(6px);
+      }
+      .hbtn:hover { border-color: var(--gold); }
+      .hbtn[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); }
+      .hbtn svg { width: 12px; height: 12px; fill: currentColor; }
+      :is(.hbtn, .rm-stop, .card button, .cta, #start):focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+      /* ---------- odometer ---------- */
+      #odo {
+        position: fixed; z-index: 15; left: 22px; bottom: 84px; display: flex; align-items: baseline; gap: 8px;
+        font: 700 11px/1 ui-monospace, "SFMono-Regular", Menlo, monospace; letter-spacing: .18em; color: var(--gold);
+        opacity: 0; transition: opacity .6s;
+      }
+      #odo.on { opacity: 1; }
+      #odo b { font: 800 22px/1 "Archivo", sans-serif; font-stretch: 118%; letter-spacing: .02em; color: var(--paper); font-variant-numeric: tabular-nums; }
+
+      /* ---------- highway sign ---------- */
+      .sign {
+        position: fixed; z-index: 10; top: 13vh; pointer-events: none;
+        display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; align-items: center;
+        padding: 12px 18px 12px 14px; min-width: 250px;
+        background: #0b0b0c; border: 2px solid var(--gold); border-radius: 6px;
+        box-shadow: 0 0 0 4px #0b0b0c, 0 18px 40px rgb(0 0 0 / .45);
+        opacity: 0; transform: translateY(-10px) scale(.92); transform-origin: top;
+        transition: opacity .5s var(--ease), transform .5s var(--ease);
+      }
+      .sign.on { opacity: 1; transform: none; }
+      .sign.left { left: 6vw; } .sign.right { right: 6vw; }
+      .sign .arrow { grid-row: span 2; width: 34px; height: 34px; display: grid; place-items: center; border: 2px solid var(--gold); border-radius: 50%; color: var(--gold); }
+      .sign .arrow svg { width: 16px; height: 16px; fill: currentColor; }
+      .sign.right .arrow svg { transform: scaleX(-1); }
+      .sign .exit { font-size: 10px; font-weight: 800; letter-spacing: .26em; color: var(--gold); }
+      .sign .sname { font-stretch: 112%; font-weight: 800; font-size: 20px; line-height: 1.05; }
+      .sign .dist { grid-column: 2; font: 700 11px/1 ui-monospace, monospace; color: var(--muted); letter-spacing: .06em; margin-top: 4px; }
+
+      /* ---------- company card ---------- */
+      .card {
+        position: fixed; z-index: 11; bottom: 92px; width: min(400px, calc(100vw - 32px));
+        padding: 22px 24px 18px; background: var(--panel); backdrop-filter: blur(10px);
+        border: 1px solid rgb(212 175 55 / .28); border-top: 2px solid var(--gold); border-radius: 4px;
+        opacity: 0; transform: translateY(18px); pointer-events: none;
+        transition: opacity .5s var(--ease) .6s, transform .5s var(--ease) .6s;
+      }
+      .card.on { opacity: 1; transform: none; pointer-events: auto; }
+      .card.left { left: 5vw; } .card.right { right: 5vw; }
+      .card .num { font-size: 10px; font-weight: 800; letter-spacing: .26em; color: var(--gold); }
+      .card h3 { margin: 8px 0 0; font-stretch: 118%; font-weight: 800; font-size: 30px; line-height: 1.02; }
+      .card .tag { margin-top: 6px; font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+      .card .line { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+      .card .more { list-style: none; margin: 0; padding: 0; overflow: hidden; max-height: 0; transition: max-height .45s var(--ease); }
+      .card.open .more { max-height: 220px; }
+      .card .more li { position: relative; padding: 7px 0 7px 16px; font-size: 14px; border-top: 1px solid rgb(255 255 255 / .08); }
+      .card .more li:first-child { margin-top: 12px; }
+      .card .more li::before { content: ""; position: absolute; left: 0; top: 14px; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+      .card .row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+      .card .plus { height: 32px; padding: 0 12px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; background: transparent; border: 1px solid var(--gold-dim); border-radius: 99px; cursor: pointer; }
+      .card .plus:hover { border-color: var(--gold); }
+      .card .back { width: 32px; height: 32px; margin-left: auto; display: grid; place-items: center; background: transparent; border: 1px solid var(--gold-dim); border-radius: 50%; cursor: pointer; }
+      .card .back svg { width: 12px; height: 12px; fill: currentColor; }
+      .go { --p: 0; position: relative; height: 36px; padding: 0 16px 0 40px; cursor: pointer; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #0b0b0c; background: var(--gold); border: 0; border-radius: 99px; }
+      .go::before { content: ""; position: absolute; left: 8px; top: 8px; width: 20px; height: 20px; border-radius: 50%;
+        background: conic-gradient(#0b0b0c calc(var(--p) * 1turn), rgb(0 0 0 / .18) 0);
+        -webkit-mask: radial-gradient(circle, transparent 5px, #000 6px); mask: radial-gradient(circle, transparent 5px, #000 6px); }
+
+      /* ---------- chapter titles ---------- */
+      .title { position: fixed; z-index: 10; left: 50%; top: 44%; width: min(900px, 90vw); translate: -50% -50%; text-align: center; pointer-events: none; }
+      .title .kicker { display: block; margin-bottom: 14px; font-size: 12px; font-weight: 800; letter-spacing: .3em; color: var(--gold); opacity: 0; transition: opacity .6s ease; }
+      .title.on .kicker { opacity: 1; }
+      .title h1, .title h2 { margin: 0; font-stretch: 125%; font-weight: 800; line-height: 1.02; letter-spacing: -.01em; font-size: clamp(34px, 6vw, 84px); text-wrap: balance; text-shadow: 0 2px 30px rgb(0 0 0 / .6); }
+      .title .w { display: inline-block; opacity: 0; transform: translateY(.35em); filter: blur(6px); transition: opacity .7s var(--ease), transform .7s var(--ease), filter .7s var(--ease); }
+      .title.on .w { opacity: 1; transform: none; filter: none; }
+      .title p { margin: 18px auto 0; max-width: 640px; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.5; font-weight: 500; text-shadow: 0 1px 3px rgb(0 0 0 / .9), 0 0 18px rgb(0 0 0 / .6); opacity: 0; transform: translateY(10px); transition: opacity .7s ease .5s, transform .7s var(--ease) .5s; }
+      .title.on p { opacity: 1; transform: none; }
+      .title .facts { display: flex; gap: 34px; justify-content: center; margin-top: 26px; opacity: 0; transition: opacity .7s ease .8s; }
+      .title.on .facts { opacity: 1; }
+      .title .facts div { text-align: center; }
+      .title .facts b { display: block; font-stretch: 125%; font-weight: 800; font-size: clamp(26px, 3.4vw, 44px); color: var(--gold); line-height: 1; }
+      .title .facts span { display: block; margin-top: 6px; font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+      .title .actions { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; opacity: 0; transition: opacity .6s ease .9s; pointer-events: auto; }
+      .title.on .actions { opacity: 1; }
+      .title:not(.on) .actions { pointer-events: none; }
+      .cta { display: inline-flex; align-items: center; height: 42px; padding: 0 20px; border-radius: 99px; cursor: pointer; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; color: #0b0b0c; background: var(--gold); border: 1px solid var(--gold); }
+      .cta.ghost { color: var(--paper); background: rgb(0 0 0 / .35); border-color: var(--gold-dim); }
+
+      /* ---------- road map ---------- */
+      #roadmap { position: fixed; z-index: 15; left: 0; right: 0; bottom: 0; height: 74px; padding: 0 5vw; background: linear-gradient(to top, rgb(0 0 0 / .8), transparent); }
+      .rm-track { position: absolute; left: 5vw; right: 5vw; bottom: 30px; height: 2px; background: rgb(255 255 255 / .16); }
+      .rm-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--gold); }
+      .rm-car { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgb(212 175 55 / .25), 0 0 16px var(--gold); }
+      .rm-stop { position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; padding: 0; background: transparent; border: 0; cursor: pointer; }
+      .rm-stop::before { content: ""; position: absolute; left: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: #0b0b0c; border: 1.5px solid var(--gold); }
+      .rm-stop.chapter::before { left: 9px; top: 5px; width: 3px; height: 12px; border-radius: 1px; background: var(--gold-dim); border: 0; }
+      .rm-stop.passed::before { background: var(--gold); }
+      .rm-stop.end::before { left: 5px; top: 5px; width: 12px; height: 12px; }
+      .rm-stop .lbl { position: absolute; bottom: 20px; left: 50%; translate: -50% 0; white-space: nowrap; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--paper); padding: 4px 8px; background: #0b0b0c; border: 1px solid var(--gold-dim); border-radius: 3px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+      .rm-stop:hover .lbl, .rm-stop:focus-visible .lbl { opacity: 1; }
+      .rm-meta { position: absolute; left: 5vw; right: 5vw; bottom: 42px; display: flex; justify-content: space-between; font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+      .rm-meta .hint { color: rgb(255 255 255 / .5); }
+
+      /* ---------- start gate ---------- */
+      #gate { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; text-align: center; background: radial-gradient(ellipse at center, rgb(0 0 0 / .2), rgb(0 0 0 / .75)); transition: opacity .8s ease; }
+      #gate.gone { opacity: 0; pointer-events: none; }
+      #gate img { height: 64px; }
+      #gate .gname { display: block; margin-top: 16px; font-stretch: 125%; font-weight: 800; letter-spacing: .3em; font-size: 14px; color: var(--gold); }
+      #gate p { margin: 18px auto 28px; max-width: 440px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+      #gate .cta { height: 48px; padding: 0 28px; }
+      #gate .how { margin-top: 18px; font-size: 11px; letter-spacing: .14em; color: rgb(255 255 255 / .45); text-transform: uppercase; }
+
+      @media (max-width: 760px) {
+        header { padding: 12px 14px; gap: 6px; }
+        header .name, #skip .t { display: none; }
+        .hbtn { padding: 0 10px; }
+        .sign { top: 11vh; min-width: 0; }
+        .sign.left, .sign.right { left: 16px; right: auto; }
+        .card, .card.left, .card.right { left: 12px; right: 12px; width: auto; bottom: 84px; padding: 18px 18px 14px; }
+        .card h3 { font-size: 24px; }
+        #odo { display: none; }
+        .rm-meta .hint { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #photo, .sign, .card, .title .w, .title p { transition: none !important; }
+        #photo.on img { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div id="photo" aria-hidden="true"><img alt="" /></div>
+    <div id="develop" aria-hidden="true"></div>
+
+    <header>
+      <div class="brand"><img src="assets/logo.svg" alt="RFS" /><span class="name" data-t="brand"></span></div>
+      <button class="hbtn" id="play" type="button" aria-label="Pause"><svg viewBox="0 0 12 12"><rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/></svg></button>
+      <button class="hbtn" id="sound" type="button" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 12 12"><path d="M1 4h2.5L7 1v10L3.5 8H1z"/><path d="M8.5 3.5a3 3 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+      <button class="hbtn" id="skip" type="button"><span class="t" data-t="skip"></span><svg viewBox="0 0 12 12"><path d="M1 1l5 5-5 5zM6 1l5 5-5 5z"/></svg></button>
+      <button class="hbtn" data-lang="en" type="button">EN</button>
+      <button class="hbtn" data-lang="pt" type="button">PT</button>
+    </header>
+
+    <div id="odo"><span data-t="odo"></span><b id="odo-km">0</b><span>km</span></div>
+
+    <div class="sign" id="sign" aria-hidden="true">
+      <span class="arrow"><svg viewBox="0 0 16 16"><path d="M9 2L3 8l6 6V10h5V6H9z"/></svg></span>
+      <span class="exit"></span><span class="sname"></span><span class="dist"></span>
+    </div>
+
+    <section class="card" id="card" aria-live="polite">
+      <div class="num"></div><h3></h3><div class="tag"></div><p class="line"></p><ul class="more"></ul>
+      <div class="row">
+        <button class="go" type="button"></button>
+        <button class="plus" type="button" aria-expanded="false"></button>
+        <button class="back" type="button"><svg viewBox="0 0 12 12"><path d="M8 1L3 6l5 5z"/></svg></button>
+      </div>
+    </section>
+
+    <div class="title" id="title" aria-live="polite"></div>
+
+    <nav id="roadmap" aria-label="Road map">
+      <div class="rm-meta"><span id="rm-where"></span><span class="hint" data-t="hint"></span></div>
+      <div class="rm-track"><div class="rm-fill" id="rm-fill"></div><div class="rm-car" id="rm-car"></div></div>
+    </nav>
+
+    <div id="gate">
+      <div>
+        <img src="assets/logo.svg" alt="" />
+        <span class="gname" data-t="brand"></span>
+        <p data-t="gate"></p>
+        <button class="cta" id="start" type="button" data-t="start"></button>
+        <div class="how" data-t="how"></div>
+      </div>
+    </div>
+
+    <script>
+      const UI = {
+        en: { brand: "RFS HOLDING GROUP", skip: "Contact", start: "Start the drive",
+          gate: "One road through the energy ecosystem RFS governs. Ten companies, from first light to nightfall.",
+          how: "It drives itself · scroll, arrows or tap to move between stops",
+          hint: "Scroll · ← → · tap", go: "Continue", more: "+ Details", less: "− Details",
+          exit: "EXIT", of: "of", pause: "Pause", play: "Play", replay: "Replay the drive",
+          visit: "Visit sunergies.com.br →", odo: "TRIP", founded: "founded", structured: "structured", lifecycle: "full lifecycle", endtoend: "End-to-end" },
+        pt: { brand: "RFS GRUPO HOLDING", skip: "Contato", start: "Iniciar o percurso",
+          gate: "Uma estrada pelo ecossistema de energia que a RFS governa. Dez empresas, da primeira luz ao anoitecer.",
+          how: "Avança sozinho · role, use as setas ou toque para ir entre as paradas",
+          hint: "Role · ← → · toque", go: "Continuar", more: "+ Detalhes", less: "− Detalhes",
+          exit: "SAÍDA", of: "de", pause: "Pausar", play: "Reproduzir", replay: "Refazer o percurso",
+          visit: "Visite sunergies.com.br →", odo: "PERCURSO", founded: "fundação", structured: "estruturados", lifecycle: "ciclo completo", endtoend: "Ponta a ponta" },
+      };
+
+      // The drive is a straight road; every moment sits at a distance (metres).
+      // Companies get a photograph (assets/img/stops/*.jpg) that the drawing
+      // develops into; chapters are titles over the drawn road.
+      const CRUISE = 44;   // m/s on the open road
+      const STOPS = [
+        { key: "opener", at: 0, kind: "hero", hold: 7,
+          en: { kicker: "RFS HOLDING GROUP", h: "Building the future of energy.", p: "Long-horizon governance for an integrated energy ecosystem in Brazil." },
+          pt: { kicker: "RFS GRUPO HOLDING", h: "Construindo o futuro da energia.", p: "Governança de longo prazo para um ecossistema integrado de energia no Brasil." } },
+        { key: "manifesto", at: 900, kind: "chapter", hold: 6,
+          en: { h: "One holding. An ecosystem of energy.", p: "Built to operate for decades, not quarters." },
+          pt: { h: "Uma holding. Um ecossistema de energia.", p: "Construído para operar por décadas, não trimestres." } },
+        { key: "model", at: 1700, kind: "chapter", hold: 6,
+          en: { h: "One strategic center. One operating platform.", p: "Multiple routes to market." },
+          pt: { h: "Um centro estratégico. Uma plataforma operacional.", p: "Múltiplas rotas para o mercado." } },
+        { key: "usinas", at: 2600, side: "left", n: "Usinas de Investimento", photo: "usinas",
+          en: { t: "Generation", p: "Develops and holds power-generation assets — the base layer of the ecosystem.", s: ["Global investment funds"] },
+          pt: { t: "Geração", p: "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema.", s: ["Fundos globais de investimento"] } },
+        { key: "sungov", at: 3400, side: "right", n: "SunGov Deals", photo: "sungov",
+          en: { t: "Government", p: "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.", s: ["PPAs", "Distributed generation", "Own plants", "Energy efficiency"] },
+          pt: { t: "Governo", p: "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público.", s: ["PPAs", "Geração distribuída", "Usinas próprias", "Eficiência energética"] } },
+        { key: "sunnews", at: 4200, side: "left", n: "Sun News", photo: "sunnews",
+          en: { t: "Media", p: "News, blog, internal communications and podcast — the voice of the ecosystem.", s: ["News", "Blog", "Internal marketing", "Podcast"] },
+          pt: { t: "Mídia", p: "Notícias, blog, endomarketing e podcast — a voz do ecossistema.", s: ["Notícias", "Blog", "Endomarketing", "Podcast"] } },
+        { key: "suncashback", at: 5000, side: "right", n: "SunCashback", photo: "suncashback",
+          en: { t: "Benefits", p: "Cashback, benefits and incentives that can convert into discounts or new investments.", s: ["Cashback & benefits", "New-contract incentives", "Conversion into discounts or new investments"] },
+          pt: { t: "Benefícios", p: "Cashback, benefícios e incentivos que podem ser convertidos em descontos ou novos investimentos.", s: ["Cashback e benefícios", "Incentivo a novas contratações", "Conversão em descontos ou novos investimentos"] } },
+        { key: "sunlife", at: 5800, side: "left", n: "SunLife", photo: "sunlife",
+          en: { t: "Health", p: "Health plans, telemedicine and medical services for the group's network.", s: ["Health plan", "Telemedicine", "Medical services", "Sustainability & social responsibility"] },
+          pt: { t: "Saúde", p: "Plano de saúde, telemedicina e serviços médicos para a rede do grupo.", s: ["Plano de saúde", "Telemedicina", "Serviços médicos", "Sustentabilidade e responsabilidade social"] } },
+        { key: "sunpower", at: 6600, side: "right", n: "SunPower Deals", photo: "sunpower",
+          en: { t: "Corporate", p: "Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.", s: ["PPAs", "Distributed generation", "Own plants"] },
+          pt: { t: "Corporativo", p: "Soluções de energia limpa de longo prazo para clientes corporativos, de PPAs a usinas próprias.", s: ["PPAs", "Geração distribuída", "Usinas próprias"] } },
+        { key: "sunsquad", at: 7400, side: "left", n: "SunSquad", photo: "sunsquad",
+          en: { t: "Partners", p: "The group's partner-development arm, connecting its network, referral programs and mentorship.", s: ["Partner & ambassador network", "Referral programs", "Mentoring & specialized teams"] },
+          pt: { t: "Parceiros", p: "A frente de desenvolvimento de parceiros do grupo, conectando rede, indicações e mentoria.", s: ["Rede de parceiros e embaixadores", "Programas de indicação", "Mentoria e times especializados"] } },
+        { key: "sunchargers", at: 8200, side: "right", n: "SunChargers", photo: "sunchargers",
+          en: { t: "Mobility", p: "An EV-charging network and convenience concept integrated with clean energy.", s: ["EV-charging network", "Convenience store (concept)", "Clean-energy integration"] },
+          pt: { t: "Mobilidade", p: "Rede de eletropostos e conceito de conveniência integrados à energia limpa.", s: ["Rede de eletropostos", "Loja de conveniência (conceito)", "Integração com energia limpa"] } },
+        { key: "sundex", at: 9000, side: "left", n: "Sundex", photo: "sundex",
+          en: { t: "Digital", p: "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.", s: ["Tokenized solar plants", "Fractional tokens", "Blockchain", "Liquidity & democratized investment"] },
+          pt: { t: "Digital", p: "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez.", s: ["Usinas solares tokenizadas", "Tokens fracionados", "Blockchain", "Liquidez e democratização do investimento"] } },
+        { key: "pdi", at: 9800, side: "right", n: "P&DI", photo: "pdi",
+          en: { t: "Innovation", p: "Research, development, education and carbon-credit initiatives for the energy transition.", s: ["Research & development", "Energy innovation", "In-person courses & efficiency", "Carbon credits"] },
+          pt: { t: "Inovação", p: "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética.", s: ["Pesquisa e desenvolvimento", "Inovação energética", "Cursos presenciais e eficiência", "Crédito de carbono"] } },
+        { key: "flagship", at: 11000, kind: "flagship", photo: "flagship", hold: 9,
+          en: { kicker: "FLAGSHIP", h: "Sunergies", p: "Since 2014, Sunergies has structured and executed solar projects end-to-end — modeling, execution, grid approval and operation — with more than 500 MW across Brazil." },
+          pt: { kicker: "CARRO-CHEFE", h: "Sunergies", p: "Desde 2014, a Sunergies estrutura e executa projetos solares de ponta a ponta — modelagem, execução, homologação e operação — com mais de 500 MW pelo Brasil." } },
+        { key: "night", at: 12200, kind: "end",
+          en: { kicker: "RFS HOLDING GROUP", h: "Built for the long horizon.", p: "Contact details to be confirmed by the owner." },
+          pt: { kicker: "RFS GRUPO HOLDING", h: "Feito para o longo horizonte.", p: "Contatos a confirmar pelo proprietário." } },
+      ];
+      const TOTAL = STOPS[STOPS.length - 1].at + 600;
+      const SUNSET_AT = STOPS.find((s) => s.key === "flagship").at; // the sun sets behind the flagship
+      const HOLD = 7;
+
+      const $ = (s) => document.querySelector(s);
+      const canvas = $("#scene"), ctx = canvas.getContext("2d");
+      const photo = $("#photo"), photoImg = photo.querySelector("img"), develop = $("#develop");
+      const sign = $("#sign"), card = $("#card"), title = $("#title"), gate = $("#gate");
+      const playBtn = $("#play"), soundBtn = $("#sound"), odo = $("#odo");
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let lang = "en";
+      try { if (localStorage.getItem("rfs-lang") === "pt") lang = "pt"; } catch (e) {}
+
+      // ---------- world state ----------
+      let state = "gate";      // gate | drive | stop
+      let camD = 0;            // camera distance along the road (m)
+      let speed = 0;           // m/s
+      let paused = false, cruise = !reduced;
+      let target = 0;          // index of the stop we are driving to (or at)
+      let holdLeft = 0, lastTs = 0, now = 0;
+      let unitNo = 0;
+      STOPS.forEach((s, i) => { s.i = i; if (s.side) s.unit = ++unitNo; });
+
+      // preload photos
+      const IMGS = {};
+      STOPS.filter((s) => s.photo).forEach((s) => { const im = new Image(); im.src = "assets/img/stops/" + s.photo + ".jpg"; IMGS[s.photo] = im; });
+      const logo = new Image(); logo.src = "assets/logo.svg";
+
+      // ---------- road map + cards ----------
+      STOPS.forEach((s) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rm-stop" + (s.side ? "" : s.kind === "end" ? " end" : " chapter");
+        b.style.left = (s.at / TOTAL * 100) + "%";
+        b.innerHTML = '<span class="lbl"></span>';
+        b.addEventListener("click", (e) => { e.stopPropagation(); jumpTo(s.i); });
+        $(".rm-track").appendChild(b);
+        s.mark = b;
+      });
+
+      function applyLang(next) {
+        lang = next;
+        document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+        try { localStorage.setItem("rfs-lang", lang); } catch (e) {}
+        document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = UI[lang][el.dataset.t]; });
+        document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+        STOPS.forEach((s) => { const l = s.n || s[lang].h; s.mark.querySelector(".lbl").textContent = l; s.mark.setAttribute("aria-label", l); });
+        renderCard(); renderTitle(true); updatePlayBtn();
+      }
+      document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+      const cur = () => STOPS[target];
+      function renderCard(show) {
+        const s = cur();
+        if (!s || !s.side) return;
+        const c = s[lang];
+        card.className = "card " + (s.side === "left" ? "right" : "left") + (card.classList.contains("open") ? " open" : "") + (show || card.classList.contains("on") ? " on" : "");
+        card.querySelector(".num").textContent = UI[lang].exit + " " + String(s.unit).padStart(2, "0") + " · " + s.unit + " " + UI[lang].of + " 10";
+        card.querySelector("h3").textContent = s.n;
+        card.querySelector(".tag").textContent = c.t;
+        card.querySelector(".line").textContent = c.p;
+        card.querySelector(".more").innerHTML = "";
+        c.s.forEach((x) => { const li = document.createElement("li"); li.textContent = x; card.querySelector(".more").appendChild(li); });
+        card.querySelector(".go").textContent = UI[lang].go;
+        const open = card.classList.contains("open");
+        card.querySelector(".plus").textContent = open ? UI[lang].less : UI[lang].more;
+        card.querySelector(".plus").setAttribute("aria-expanded", String(open));
+      }
+      function hideCard() { card.classList.remove("on", "open"); }
+      card.querySelector(".go").addEventListener("click", (e) => { e.stopPropagation(); drive(); });
+      card.querySelector(".back").addEventListener("click", (e) => { e.stopPropagation(); prevStop(); });
+      card.querySelector(".plus").addEventListener("click", (e) => { e.stopPropagation(); card.classList.toggle("open"); renderCard(); });
+      let cardHover = false;
+      card.addEventListener("pointerenter", () => { cardHover = true; });
+      card.addEventListener("pointerleave", () => { cardHover = false; });
+
+      let titleFor = -1;
+      function renderTitle(rebuild) {
+        const s = cur();
+        if (!s || s.side) { title.classList.remove("on"); title.innerHTML = ""; titleFor = -1; return; }
+        if (rebuild || titleFor !== target) {
+          const c = s[lang];
+          title.innerHTML = (c.kicker ? '<span class="kicker"></span>' : "") +
+            (s.kind === "hero" ? "<h1>" : "<h2>") + c.h.split(" ").map((w, k) => '<span class="w" style="transition-delay:' + (k * 70) + 'ms"></span>').join(" ") + (s.kind === "hero" ? "</h1>" : "</h2>") + "<p></p>" +
+            (s.kind === "flagship" ? '<div class="facts"><div><b>2014</b><span></span></div><div><b>500+ MW</b><span></span></div><div><b></b><span></span></div></div><div class="actions"><a class="cta" href="https://sunergies.com.br" target="_blank" rel="noopener"></a></div>' : "") +
+            (s.kind === "end" ? '<div class="actions"><button class="cta" type="button" id="replay"></button></div>' : "");
+          if (c.kicker) title.querySelector(".kicker").textContent = c.kicker;
+          c.h.split(" ").forEach((w, k) => { title.querySelectorAll(".w")[k].textContent = w; });
+          title.querySelector("p").textContent = c.p;
+          if (s.kind === "flagship") {
+            const f = title.querySelectorAll(".facts div");
+            f[0].querySelector("span").textContent = UI[lang].founded;
+            f[1].querySelector("span").textContent = UI[lang].structured;
+            f[2].querySelector("b").textContent = UI[lang].endtoend; f[2].querySelector("span").textContent = UI[lang].lifecycle;
+            title.querySelector(".cta").textContent = UI[lang].visit;
+          }
+          if (s.kind === "end") { const r = title.querySelector("#replay"); r.textContent = UI[lang].replay; r.addEventListener("click", (e) => { e.stopPropagation(); jumpTo(0); }); }
+          titleFor = target;
+          title.classList.remove("on");
+        }
+      }
+
+      // ---------- drive logic ----------
+      function arrive() {
+        const s = cur();
+        camD = s.at; speed = 0; state = "stop"; holdLeft = s.hold || HOLD;
+        sign.classList.remove("on");
+        if (s.photo) showPhoto(s.photo);
+        if (s.side) renderCard(true);
+        if (s.kind === "end") holdLeft = Infinity;
+        chime();
+      }
+      function drive() {
+        if (state !== "stop") return;
+        hideCard(); hidePhoto();
+        if (target < STOPS.length - 1) target++;
+        state = "drive";
+      }
+      function jumpTo(i) {
+        if (state === "gate") begin();
+        hideCard(); hidePhoto();
+        target = i;
+        camD = Math.max(0, STOPS[i].at - 260); speed = CRUISE * 0.7;
+        state = "drive";
+        renderTitle(true);
+      }
+      function nextStop() {
+        if (state === "gate") return begin();
+        if (state === "stop") return cur().kind === "end" ? null : drive();
+        // already driving: skip the rest of the approach
+        if (STOPS[target].at - camD > 260) { camD = STOPS[target].at - 260; speed = CRUISE * 0.7; }
+      }
+      function prevStop() {
+        if (state === "gate") return;
+        jumpTo(Math.max(0, state === "stop" ? target - 1 : target - 1));
+      }
+
+      function showPhoto(key) {
+        photoImg.src = IMGS[key].src;
+        photo.classList.remove("on"); void photo.offsetWidth; photo.classList.add("on");
+        develop.classList.remove("on"); void develop.offsetWidth; develop.classList.add("on");
+      }
+      function hidePhoto() { photo.classList.remove("on"); }
+
+      function updatePlayBtn() {
+        playBtn.setAttribute("aria-label", paused ? UI[lang].play : UI[lang].pause);
+        playBtn.querySelector("svg").innerHTML = paused ? '<path d="M2 1l9 5-9 5z"/>' : '<rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/>';
+      }
+      playBtn.addEventListener("click", (e) => { e.stopPropagation(); if (state === "gate") return begin(); paused = !paused; updatePlayBtn(); });
+      $("#skip").addEventListener("click", (e) => { e.stopPropagation(); jumpTo(STOPS.length - 1); });
+
+      // ---------- sound: engine hum + wind, chime at stops (synthesised, off by default) ----------
+      let ac = null, hum = null, humGain = null, windGain = null, soundOn = false;
+      function soundInit() {
+        ac = new (window.AudioContext || window.webkitAudioContext)();
+        const master = ac.createGain(); master.gain.value = 0.5; master.connect(ac.destination);
+        hum = ac.createOscillator(); hum.type = "sawtooth"; hum.frequency.value = 48;
+        const hum2 = ac.createOscillator(); hum2.type = "triangle"; hum2.frequency.value = 96;
+        const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 180;
+        humGain = ac.createGain(); humGain.gain.value = 0;
+        hum.connect(lp); hum2.connect(lp); lp.connect(humGain); humGain.connect(master);
+        const buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+        const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+        const wind = ac.createBufferSource(); wind.buffer = buf; wind.loop = true;
+        const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 500; bp.Q.value = 0.6;
+        windGain = ac.createGain(); windGain.gain.value = 0;
+        wind.connect(bp); bp.connect(windGain); windGain.connect(master);
+        hum.start(); hum2.start(); wind.start();
+      }
+      function chime() {
+        if (!soundOn || !ac) return;
+        [880, 1318.5].forEach((f, k) => {
+          const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f;
+          const g = ac.createGain(); g.gain.setValueAtTime(0, ac.currentTime + k * 0.12);
+          g.gain.linearRampToValueAtTime(0.12, ac.currentTime + k * 0.12 + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + k * 0.12 + 1.6);
+          o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + k * 0.12); o.stop(ac.currentTime + k * 0.12 + 1.7);
+        });
+      }
+      soundBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        soundOn = !soundOn;
+        if (soundOn && !ac) soundInit();
+        if (ac && ac.state === "suspended") ac.resume();
+        soundBtn.setAttribute("aria-pressed", String(soundOn));
+      });
+
+      // ---------- input ----------
+      let wheelLock = 0;
+      addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const t = performance.now();
+        if (t < wheelLock || Math.abs(e.deltaY) < 12) return;
+        wheelLock = t + 900;
+        e.deltaY > 0 ? nextStop() : prevStop();
+      }, { passive: false });
+      addEventListener("keydown", (e) => {
+        if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key) || (e.key === " " && state !== "gate")) { e.preventDefault(); nextStop(); }
+        else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); prevStop(); }
+        else if (e.key === "p" || e.key === "k") { paused = !paused; updatePlayBtn(); }
+        else if (e.key === "Enter" && state === "gate") begin();
+      });
+      let touchY = null;
+      addEventListener("touchstart", (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+      addEventListener("touchend", (e) => { if (touchY == null) return; const dy = touchY - e.changedTouches[0].clientY; touchY = null; if (Math.abs(dy) > 50) dy > 0 ? nextStop() : prevStop(); }, { passive: true });
+      document.body.addEventListener("click", (e) => { if (e.target.closest("button, a, .card, header, #roadmap")) return; nextStop(); });
+
+      function begin() {
+        if (state !== "gate") return;
+        gate.classList.add("gone");
+        setTimeout(() => { gate.style.display = "none"; }, 800);
+        odo.classList.add("on");
+        target = 0; camD = 0; speed = 0; arrive();
+        renderTitle(true);
+      }
+      $("#start").addEventListener("click", (e) => { e.stopPropagation(); begin(); });
+
+      // ---------- rendering the drawn world ----------
+      let W = 0, H = 0, DPR = 1;
+      function resize() {
+        DPR = Math.min(2, devicePixelRatio || 1);
+        W = innerWidth; H = innerHeight;
+        canvas.width = W * DPR; canvas.height = H * DPR;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      }
+      addEventListener("resize", resize); resize();
+
+      const CAMH = 2.2, ROADW = 3.6, FAR = 520;
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+      const prnd = (n) => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); };
+      const mix = (c1, c2, t) => c1.map((v, i) => Math.round(lerp(v, c2[i], t)));
+      const rgb = (c, a = 1) => `rgb(${c[0]} ${c[1]} ${c[2]} / ${a})`;
+      const GOLD = [212, 175, 55];
+
+      // day phase 0..1 along the drive: dawn -> day -> golden -> sunset (at the flagship) -> night
+      function phase() { return clamp(camD / SUNSET_AT, 0, 1.3); }
+      function sunElev(p) { // 0 = on the horizon
+        if (p <= 1) return Math.sin(Math.PI * clamp((p + 0.02) / 1.04, 0, 1)) * 0.9;
+        return -0.4 * clamp((p - 1) / 0.3, 0, 1); // below the horizon at night
+      }
+
+      // scenery along the road (deterministic)
+      const pylons = []; for (let z = 300; z < TOTAL + 800; z += 190) pylons.push({ d: z, x: (Math.floor(z / 190) % 2 ? -1 : 1) * (22 + prnd(z) * 8), h: 11 + prnd(z + 1) * 3 });
+      const posts = []; for (let z = 0; z < TOTAL + 800; z += 14) posts.push(z);
+      const hills = []; for (let i = 0; i < 40; i++) hills.push({ x: (i / 40) * 2 - 1, h: 0.01 + prnd(i * 3.3) * 0.035, w: 0.06 + prnd(i * 7.7) * 0.12 });
+      const stars = []; for (let i = 0; i < 220; i++) stars.push({ x: prnd(i + .1), y: prnd(i + .5) * 0.5, r: .4 + prnd(i + .9) * 1.2, tw: .5 + prnd(i + .3) * 2, ph: prnd(i + .7) * 6.28 });
+
+      function proj(x, y, z) { // world (x right, y up, z ahead) -> screen; camera at (0, CAMH, 0)
+        const f = W * 0.62, hy = H * 0.46;
+        return [W / 2 + (x * f) / z, hy - ((y - CAMH) * f) / z];
+      }
+
+      function draw(dt) {
+        const p = phase(), e = sunElev(p);
+        const night = clamp((p - 1) / 0.11, 0, 1);
+        const dusk = smooth(0.72, 1.0, p) * (1 - night);
+        const dawn = 1 - smooth(0, 0.2, p);
+        const hy = H * 0.46;
+
+        // sky: black room, a little colour only where the sun is
+        ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+        const top = mix(mix([2, 3, 8], [6, 6, 10], 1 - dawn), [0, 0, 0], night);
+        const hor = mix(mix([38, 20, 8], [30, 26, 16], 1 - dawn), [72, 28, 6], dusk);
+        const horN = mix(hor, [4, 4, 8], night);
+        const sky = ctx.createLinearGradient(0, 0, 0, hy);
+        sky.addColorStop(0, rgb(top)); sky.addColorStop(1, rgb(horN));
+        ctx.fillStyle = sky; ctx.fillRect(0, 0, W, hy);
+
+        // stars
+        if (night > 0.02) {
+          for (const s of stars) {
+            const a = night * (0.35 + 0.65 * Math.abs(Math.sin(now * s.tw + s.ph)));
+            ctx.fillStyle = rgb([255, 245, 220], a); ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, 6.28); ctx.fill();
+          }
+        }
+
+        // sun: drifts from right of the road at dawn to just left of it at sunset
+        const sunX = W * (0.62 - 0.2 * clamp(p, 0, 1)), sunY = hy - e * H * 0.42;
+        const sunR = W * (0.022 + 0.02 * (1 - clamp(e * 1.6, 0, 1)));
+        if (e > -0.05) {
+          const g = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR * 9);
+          g.addColorStop(0, rgb(GOLD, 0.55)); g.addColorStop(0.25, rgb(GOLD, 0.16)); g.addColorStop(1, rgb(GOLD, 0));
+          ctx.fillStyle = g; ctx.fillRect(sunX - sunR * 9, sunY - sunR * 9, sunR * 18, sunR * 18);
+          ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, hy + 1); ctx.clip();
+          ctx.fillStyle = rgb(mix([255, 232, 160], [232, 150, 60], dusk + (1 - clamp(e * 2, 0, 1)) * 0.6));
+          ctx.beginPath(); ctx.arc(sunX, sunY, sunR, 0, 6.28); ctx.fill(); ctx.restore();
+        }
+
+        // distant hills: a single gold hairline skyline
+        ctx.strokeStyle = rgb(GOLD, 0.35 - night * 0.2); ctx.lineWidth = 1; ctx.beginPath();
+        for (let i = 0; i <= 80; i++) {
+          const x = i / 80, sx = x * W;
+          let h = 0; for (const k of hills) h += k.h * Math.exp(-((x * 2 - 1 - k.x) ** 2) / (k.w * k.w * 0.5));
+          const y = hy - h * H * 0.3;
+          i ? ctx.lineTo(sx, y) : ctx.moveTo(sx, y);
+        }
+        ctx.stroke();
+        // horizon
+        ctx.strokeStyle = rgb(GOLD, 0.7); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, hy); ctx.lineTo(W, hy); ctx.stroke();
+
+        // ground haze: gold glow along the horizon
+        const gg = ctx.createLinearGradient(0, hy, 0, H);
+        gg.addColorStop(0, rgb(GOLD, 0.10 + dusk * 0.06)); gg.addColorStop(0.35, rgb(GOLD, 0)); gg.addColorStop(1, rgb(GOLD, 0));
+        ctx.fillStyle = gg; ctx.fillRect(0, hy, W, H - hy);
+
+        // road edges
+        const roadA = 0.9;
+        const [lx1, ly1] = proj(-ROADW, 0, 1.2), [lx2, ly2] = proj(-ROADW, 0, FAR);
+        const [rx1, ry1] = proj(ROADW, 0, 1.2), [rx2, ry2] = proj(ROADW, 0, FAR);
+        ctx.shadowColor = rgb(GOLD, 0.9); ctx.shadowBlur = 8;
+        ctx.strokeStyle = rgb(GOLD, roadA); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(lx1, ly1); ctx.lineTo(lx2, ly2); ctx.moveTo(rx1, ry1); ctx.lineTo(rx2, ry2); ctx.stroke();
+        ctx.shadowBlur = 0;
+        // asphalt: barely-there fill so the road reads as a surface
+        ctx.fillStyle = rgb([255, 255, 255], 0.025);
+        ctx.beginPath(); ctx.moveTo(lx1, ly1); ctx.lineTo(lx2, ly2); ctx.lineTo(rx2, ry2); ctx.lineTo(rx1, ry1); ctx.closePath(); ctx.fill();
+
+        // centre dashes (3 m on, 6 m off), scrolling with the camera
+        const DASH = 3, GAP = 6, PER = DASH + GAP;
+        let z0 = PER - (camD % PER);
+        ctx.strokeStyle = rgb(GOLD, 0.95);
+        for (let z = z0; z < FAR; z += PER) {
+          const za = Math.max(1.2, z), zb = z + DASH;
+          const [ax, ay] = proj(0, 0, za), [bx, by] = proj(0, 0, zb);
+          ctx.lineWidth = clamp(120 / z, 0.6, 4); ctx.globalAlpha = clamp(1 - z / FAR, 0.05, 1);
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        // fence posts
+        ctx.strokeStyle = rgb(GOLD, 0.45); ctx.lineWidth = 1;
+        for (const d of posts) {
+          const z = d - camD; if (z < 2 || z > 260) continue;
+          for (const side of [-1, 1]) {
+            const [x1, y1] = proj(side * 7.5, 0, z), [x2, y2] = proj(side * 7.5, 1.2, z);
+            ctx.globalAlpha = clamp(1 - z / 260, 0, 1) * 0.8;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // pylons: thin gold towers with a cable sweeping between them
+        let prev = null;
+        ctx.strokeStyle = rgb(GOLD, 0.6); ctx.lineWidth = 1;
+        for (const py of pylons) {
+          const z = py.d - camD; if (z > FAR) break; if (z < 3) { prev = null; continue; }
+          const a = clamp(1 - z / FAR, 0, 1);
+          const [bx, by] = proj(py.x, 0, z), [tx, ty] = proj(py.x, py.h, z), [ax, ay] = proj(py.x - 2.2, py.h * 0.78, z), [cx2, cy2] = proj(py.x + 2.2, py.h * 0.78, z);
+          ctx.globalAlpha = a * 0.9;
+          ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.moveTo(ax, ay); ctx.lineTo(cx2, cy2); ctx.stroke();
+          prev = [tx, ty, py.x > 0];
+        }
+        ctx.globalAlpha = 1;
+
+        // the next company as a gold wireframe by the roadside, growing as we approach
+        const s = STOPS[target];
+        if (s && s.side && state === "drive") {
+          const z = s.at - camD, dir = s.side === "left" ? -1 : 1;
+          if (z > 4 && z < 420) {
+            const a = clamp(1 - z / 420, 0, 1);
+            const x0 = dir * 16, x1 = dir * 40, h = 6 + (s.unit % 3) * 2, zd = z + 4, zf = z + 34;
+            const P = (x, y, zz) => proj(x, y, zz);
+            const pts = [P(x0, 0, zd), P(x1, 0, zd), P(x1, h, zd), P(x0, h, zd), P(x0, 0, zf), P(x1, 0, zf), P(x1, h, zf), P(x0, h, zf)];
+            const E = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+            ctx.strokeStyle = rgb(GOLD, 0.9); ctx.lineWidth = 1.2; ctx.globalAlpha = a;
+            ctx.shadowColor = rgb(GOLD, 0.8); ctx.shadowBlur = 6;
+            ctx.beginPath(); for (const [i, j] of E) { ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[j][0], pts[j][1]); } ctx.stroke();
+            ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+          }
+        }
+
+        // arrival: the RFS mark rises where the sun set
+        if (s && s.kind === "end" && state === "stop" && logo.complete) {
+          const a = clamp((now - arrivedAt) / 2.5, 0, 1);
+          const size = Math.min(W, H) * 0.22;
+          const g = ctx.createRadialGradient(W / 2, hy, 0, W / 2, hy, size * 2.2);
+          g.addColorStop(0, rgb(GOLD, 0.35 * a)); g.addColorStop(1, rgb(GOLD, 0));
+          ctx.fillStyle = g; ctx.fillRect(W / 2 - size * 2.2, hy - size * 2.2, size * 4.4, size * 4.4);
+          ctx.globalAlpha = a;
+          ctx.drawImage(logo, W / 2 - size / 2, hy - size * 0.98, size, size);
+          ctx.globalAlpha = 1;
+        }
+
+        // legibility vignette
+        const v = ctx.createRadialGradient(W / 2, H * 0.5, H * 0.3, W / 2, H * 0.5, H * 0.95);
+        v.addColorStop(0, "rgb(0 0 0 / 0)"); v.addColorStop(1, "rgb(0 0 0 / .55)");
+        ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+      }
+
+      // ---------- main loop ----------
+      let arrivedAt = 0;
+      function loop(ts) {
+        const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0;
+        lastTs = ts; now = ts / 1000;
+        const s = cur();
+        if (state === "drive" && !paused) {
+          const dist = s.at - camD;
+          // ease into the stop over the last 150 m; chapters slide through slower
+          // brake over the last 150 m (speed ~ sqrt of distance, like a real stop), never crawl
+          let want = dist < 150 ? Math.max(6, CRUISE * Math.sqrt(dist / 150)) : CRUISE;
+          speed += (want - speed) * Math.min(1, dt * (want < speed ? 3 : 0.8));
+          camD += speed * dt;
+          if (camD >= s.at - 1.5) { arrivedAt = now; arrive(); }
+        } else if (state === "stop" && cruise && !paused && !cardHover && !card.classList.contains("open") && s.kind !== "end") {
+          holdLeft -= dt;
+          if (holdLeft <= 0) drive();
+        }
+        if (state === "stop") speed = 0;
+
+        // sign on approach
+        if (s && s.side && state === "drive") {
+          const z = s.at - camD;
+          const on = z > 6 && z < 360;
+          sign.classList.toggle("on", on);
+          sign.classList.toggle("left", s.side === "left"); sign.classList.toggle("right", s.side === "right");
+          sign.querySelector(".exit").textContent = UI[lang].exit + " " + String(s.unit).padStart(2, "0");
+          sign.querySelector(".sname").textContent = s.n;
+          sign.querySelector(".dist").textContent = Math.max(0, Math.round(z / 50) * 50) + " m";
+        } else sign.classList.remove("on");
+
+        // titles
+        if (s && !s.side) {
+          renderTitle(false);
+          const z = s.at - camD;
+          title.classList.toggle("on", state === "stop" || (state === "drive" && z < 120 && s.kind !== "end"));
+        } else title.classList.remove("on");
+
+        card.querySelector(".go").style.setProperty("--p", cruise && !paused && s && s.side ? String(1 - clamp(holdLeft, 0, HOLD) / HOLD) : "0");
+
+        // odometer + road map
+        $("#odo-km").textContent = (camD / 1000 * 9).toFixed(1);
+        const pct = camD / TOTAL * 100;
+        $("#rm-fill").style.width = pct + "%"; $("#rm-car").style.left = pct + "%";
+        STOPS.forEach((k) => k.mark.classList.toggle("passed", k.at <= camD + 1));
+        $("#rm-where").textContent = s ? (s.side ? UI[lang].exit + " " + String(s.unit).padStart(2, "0") + " · " + s.n : s[lang].h) : "";
+
+        // sound follows speed
+        if (ac && humGain) {
+          const v = soundOn ? speed / CRUISE : 0;
+          humGain.gain.setTargetAtTime(0.10 * v + (soundOn ? 0.015 : 0), ac.currentTime, 0.2);
+          windGain.gain.setTargetAtTime(0.09 * v * v, ac.currentTime, 0.3);
+          if (hum) hum.frequency.setTargetAtTime(44 + 40 * v, ac.currentTime, 0.3);
+        }
+
+        if (state !== "gate" || true) draw(dt);
+        requestAnimationFrame(loop);
+      }
+
+      applyLang(lang); updatePlayBtn();
+      requestAnimationFrame(loop);
+      if (new URLSearchParams(location.search).has("autostart")) begin();
+    </script>
+  </body>
+</html>

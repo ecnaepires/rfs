@@ -31,3 +31,10 @@ page can seek them smoothly while scrolling.
 - Pages trim unusable parts: Usinas plays to 10.9 s (the camera drifts
   backwards after that); SunGov starts at 3.9 s (the clip stalls at 3.5 s).
 - Stabilisation is light (vidstab smoothing 6) so intended turns are kept.
+
+## Stop photographs (assets/img/stops)
+Stills the drawn road develops into on road.html. GPT Image 2.5, 21:9, edited
+from each company's Kling start frame so the building faces the camera:
+usinas 4d98df31 · sungov 5b92b3f1 · sunnews 4b065929 · suncashback 9e4279ec ·
+sunlife 2fc0428b · sunpower 2eba9a08 · sunsquad 62daf793 · sunchargers c6ae3d73 ·
+sundex ab1281cf · pdi 5c8b5d99 · flagship febc0226 (afterglow).
