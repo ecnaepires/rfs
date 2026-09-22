@@ -424,6 +424,7 @@
       let lastTs = 0;
       let stopDone = false;    // the current clip's stop has been served
       let titleShown = -1;
+      let switchToken = 0;     // bumps on every clip switch; stale loads are ignored
 
       function setActive(i, from) {
         ensureLoaded(i); ensureLoaded(i + 1);
@@ -432,10 +433,15 @@
         cur = i; stopDone = c.stop != null && from > c.stop + 0.05;
         stage.style.backgroundImage = "url(assets/video/" + c.f + ".jpg)";
         const v = c.video;
+        const token = ++switchToken;
         const start = () => {
+          if (token !== switchToken) return; // a later jump already took over
           try { v.currentTime = from; } catch (e) {}
           v.classList.add("active");
-          if (prev && prev !== c) { const pv = prev.video; setTimeout(() => { pv.classList.remove("active"); pv.pause(); }, 650); }
+          setTimeout(() => {
+            if (token !== switchToken) return;
+            CLIPS.forEach((k) => { if (k !== c) { k.video.classList.remove("active"); if (!k.video.paused) k.video.pause(); } });
+          }, 650);
           if (!paused) v.play().catch(() => {});
         };
         if (v.readyState >= 1) start(); else v.addEventListener("loadedmetadata", start, { once: true });
@@ -618,6 +624,9 @@
             if (c.stop != null) r = (!stopDone && t > c.stop - APPROACH) || (stopDone && t < c.stop + 1.2) ? 1 : FAST;
             r *= rateMult;
             if (Math.abs(v.playbackRate - r) > 0.01) v.playbackRate = r;
+            // a play() can be swallowed by a load/seek racing it; keep the car moving
+            if (!paused && v.paused && !v.seeking && v.readyState >= 2 && !v.ended) v.play().catch(() => {});
+            if (v.readyState >= 2 && !v.classList.contains("active")) v.classList.add("active");
 
             if (c.stop != null && !stopDone && t >= c.stop) enterStop();
             else if (v.duration && t >= v.duration - 0.25) {
