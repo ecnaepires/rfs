@@ -310,10 +310,10 @@
         { f: "07-substation", d: 10, kind: "chapter", titleAt: [1.2, 8.6], rate: 1.25,
           en: { h: "One strategic center. One operating platform.", p: "Multiple routes to market." },
           pt: { h: "Um centro estratégico. Uma plataforma operacional.", p: "Múltiplas rotas para o mercado." } },
-        { f: "02-usinas", d: 12, stop: 6.2, side: "left", n: "Usinas de Investimento",
+        { f: "02-usinas", d: 12, out: 10.9, stop: 6.2, side: "left", n: "Usinas de Investimento",
           en: { t: "Generation", p: "Develops and holds power-generation assets — the base layer of the ecosystem.", s: ["Global investment funds"] },
           pt: { t: "Geração", p: "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema.", s: ["Fundos globais de investimento"] } },
-        { f: "03-sungov", d: 10, stop: 9.5, side: "right", n: "SunGov Deals",
+        { f: "03-sungov", d: 10, in: 3.9, stop: 9.5, side: "right", n: "SunGov Deals",
           en: { t: "Government", p: "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.", s: ["PPAs", "Distributed generation", "Own plants", "Energy efficiency"] },
           pt: { t: "Governo", p: "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público.", s: ["PPAs", "Geração distribuída", "Usinas próprias", "Eficiência energética"] } },
         { f: "04-sunnews", d: 12, stop: 8.4, side: "left", n: "Sun News",
@@ -337,7 +337,7 @@
         { f: "11-sundex", d: 10, stop: 9.5, side: "left", n: "Sundex",
           en: { t: "Digital", p: "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.", s: ["Tokenized solar plants", "Fractional tokens", "Blockchain", "Liquidity & democratized investment"] },
           pt: { t: "Digital", p: "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez.", s: ["Usinas solares tokenizadas", "Tokens fracionados", "Blockchain", "Liquidez e democratização do investimento"] } },
-        { f: "12-pdi", d: 12, stop: 9.6, side: "right", n: "P&DI",
+        { f: "12-pdi", d: 10, stop: 9.5, side: "right", n: "P&DI",
           en: { t: "Innovation", p: "Research, development, education and carbon-credit initiatives for the energy transition.", s: ["Research & development", "Energy innovation", "In-person courses & efficiency", "Carbon credits"] },
           pt: { t: "Inovação", p: "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética.", s: ["Pesquisa e desenvolvimento", "Inovação energética", "Cursos presenciais e eficiência", "Crédito de carbono"] } },
         { f: "13-flagship", d: 10, kind: "flagship", stop: 5.5, titleAt: [1.5, 99],
@@ -349,7 +349,7 @@
       ];
 
       const HOLD = 7;          // seconds a stop waits before driving on (cruise)
-      const FAST = 1.6;        // playback rate on the straight road between stops
+      const FAST = 1.3;        // playback rate on the straight road between stops
       const APPROACH = 3.2;    // seconds before a stop that play drops to 1x
       const BRAKE = 1.4;       // last seconds before a stop: ease down to a crawl
       const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -473,10 +473,13 @@
         if (CLIPS[cur].kind === "flagship") renderTitle(true, false);
       }
 
-      function stopPoint(i) { const c = CLIPS[i]; return Math.max(0, (c.stop != null ? c.stop : 0) - APPROACH); }
+      // in/out trim the unusable head/tail of a clip (stalls, backwards drift)
+      const inPt = (c) => c.in || 0;
+      const outPt = (c) => c.out || c.video.duration || c.d;
+      function stopPoint(i) { const c = CLIPS[i]; return Math.max(inPt(c), (c.stop != null ? c.stop : 0) - APPROACH); }
       function jumpTo(i) {
         if (state === "gate") begin();
-        setActive(i, CLIPS[i].side || CLIPS[i].kind === "flagship" || CLIPS[i].kind === "end" ? stopPoint(i) : 0);
+        setActive(i, CLIPS[i].side || CLIPS[i].kind === "flagship" || CLIPS[i].kind === "end" ? stopPoint(i) : inPt(CLIPS[i]));
       }
       function nextStop() {
         if (state === "gate") return begin();
@@ -571,8 +574,9 @@
       playBtn.addEventListener("click", (e) => { e.stopPropagation(); if (state === "gate") return begin(); setPaused(!paused); });
       speedBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        rateMult = rateMult === 1 ? 2 : 1;
+        rateMult = rateMult === 1 ? 1.5 : 1;
         speedBtn.textContent = rateMult + "×";
+        speedBtn.setAttribute("aria-label", "Speed " + rateMult + "x");
         speedBtn.setAttribute("aria-pressed", String(rateMult === 2));
       });
       $("#skip").addEventListener("click", (e) => { e.stopPropagation(); jumpTo(CLIPS.length - 1); });
@@ -608,7 +612,7 @@
         if (state !== "gate") return;
         gate.classList.add("gone");
         setTimeout(() => { gate.style.display = "none"; }, 800);
-        setActive(0, 0);
+        setActive(0, inPt(CLIPS[0]));
         playBtn.focus({ preventScroll: true });
       }
       $("#start").addEventListener("click", (e) => { e.stopPropagation(); begin(); });
@@ -633,7 +637,7 @@
                 if (toStop < BRAKE) r = 0.3 + 0.7 * (toStop / BRAKE);
                 else if (toStop < APPROACH) r = 1;
                 else r = FAST;
-              } else r = t < c.stop + 1.5 ? 1 : FAST;
+              } else r = 1; // after a stop: normal speed down the road to the next clip
             }
             r *= rateMult;
             rateNow += (r - rateNow) * Math.min(1, dt * 2.2);
@@ -643,8 +647,8 @@
             if (v.readyState >= 2 && !v.classList.contains("active")) v.classList.add("active");
 
             if (c.stop != null && !stopDone && t >= c.stop) enterStop();
-            else if (v.duration && t >= v.duration - 0.5) {
-              if (cur < CLIPS.length - 1) setActive(cur + 1, 0);
+            else if (v.duration && t >= outPt(c) - 0.4) {
+              if (cur < CLIPS.length - 1) setActive(cur + 1, inPt(CLIPS[cur + 1]));
               else v.pause();
             }
           } else if (state === "stop" && cruise && !paused && !cardHover && !card.classList.contains("open") && c.kind !== "end") {

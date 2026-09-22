@@ -157,10 +157,10 @@
         { f: "07-substation", d: 10, kind: "center",
           en: { h: "One strategic center. One operating platform.", p: "Multiple routes to market." },
           pt: { h: "Um centro estratégico. Uma plataforma operacional.", p: "Múltiplas rotas para o mercado." } },
-        { f: "02-usinas", d: 12, side: "left", n: "Usinas de Investimento",
+        { f: "02-usinas", d: 10.9, side: "left", n: "Usinas de Investimento",
           en: { t: "Generation", p: "Develops and holds power-generation assets — the base layer of the ecosystem." },
           pt: { t: "Geração", p: "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema." } },
-        { f: "03-sungov", d: 10, side: "right", n: "SunGov Deals",
+        { f: "03-sungov", d: 6.1, in: 3.9, side: "right", n: "SunGov Deals",
           en: { t: "Government", p: "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector." },
           pt: { t: "Governo", p: "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público." } },
         { f: "04-sunnews", d: 12, side: "left", n: "Sun News",
@@ -184,7 +184,7 @@
         { f: "11-sundex", d: 10, side: "left", n: "Sundex",
           en: { t: "Digital", p: "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity." },
           pt: { t: "Digital", p: "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez." } },
-        { f: "12-pdi", d: 12, side: "right", n: "P&DI",
+        { f: "12-pdi", d: 10, side: "right", n: "P&DI",
           en: { t: "Innovation", p: "Research, development, education and carbon-credit initiatives for the energy transition." },
           pt: { t: "Inovação", p: "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética." } },
         { f: "13-flagship", d: 10, kind: "center",
@@ -317,7 +317,7 @@
           k.video.style.opacity = k.video.readyState >= 2 ? o : 0;
           if (o > 0) {
             const lt = i === idx ? local : 0;
-            const want = Math.min(lt, (k.video.duration || k.d) - 0.05);
+            const want = Math.min((k.in || 0) + lt, (k.video.duration || k.d) - 0.05);
             if (Math.abs(k.video.currentTime - want) > 0.03 && !k.video.seeking) k.video.currentTime = want;
           }
           // keep neighbours buffered

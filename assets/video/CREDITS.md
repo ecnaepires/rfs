@@ -3,8 +3,8 @@
 Generated for RFS in the owner's Higgsfield account on 8–9 Sep 2026 (two re-shot 22 Sep)
 (start frames: Nano Banana Flash; motion: Kling 3.0, 1080p pro, no audio).
 Masters (2212×936, 24 fps) are kept on the VPS at `/opt/rfs-footage-src/`;
-the files here are stabilised (vidstab), motion-interpolated to 60 fps and
-re-encoded at 1280 wide with a 12-frame GOP — see smooth.sh.
+the files here are 1280-wide H.264 re-encodes with a 6-frame GOP so the
+page can seek them smoothly while scrolling.
 
 | File | Chapter | Higgsfield generation id |
 |---|---|---|
@@ -18,9 +18,9 @@ re-encoded at 1280 wide with a 12-frame GOP — see smooth.sh.
 | 07-substation | Model (substation) | cc709edf-6b1d-4de1-96af-fbe6e5b8516c |
 | 08-sunpower | SunPower Deals | 84cf4be5-5260-4137-b244-22dab2ecd3fe (re-shot 22 Sep, golden hour; start frame cc38de9d GPT Image 2.5) |
 | 09-sunsquad | SunSquad | 9c6a6f25-6995-4ded-b494-b10e17d5b96e |
-| 10-sunchargers | SunChargers | 37e2138e-c28e-44c8-82b9-879630b03c41 (re-shot 22 Sep; start 1e88aec6 + end frame 14b1eeb6) |
+| 10-sunchargers | SunChargers | 3a9b0ced-0331-4a72-8ad8-541e8bbbe1c7 (re-shot 22 Sep; start 1e88aec6 + end frame c6ae3d73, cars keep facing left) |
 | 11-sundex | Sundex | 34961695-83a0-4680-85de-5ecf5203c99f (re-shot 22 Sep; start 6c1ab065 + end frame ab1281cf) |
-| 12-pdi | P&DI | d90e363e-d938-4f4c-ae15-8d68b0be4853 |
+| 12-pdi | P&DI | fbd54164-02fc-4e75-9382-cabee1c8cae4 (re-shot 22 Sep; start 550b7859 + end frame 5c8b5d99) |
 | 13-flagship | Sunergies flagship | 673f5f5b-56fb-4fe3-a22e-72acd6c86c05 (re-shot 22 Sep, afterglow; start frame febc0226 GPT Image 2.5) |
 | 14-night | Night arrival | 99633309-6178-4f53-935a-47d792a1efca |
 - 07-substation plays right after 01-pylons so the light runs one way:
@@ -28,3 +28,6 @@ re-encoded at 1280 wide with a 12-frame GOP — see smooth.sh.
 - v1 masters of the two re-shot clips are kept as *.v1.mp4 on the VPS.
 - SunGov, SunChargers and Sundex were re-shot with a Kling end frame that
   faces the building head-on, because the originals never turned to it.
+- Pages trim unusable parts: Usinas plays to 10.9 s (the camera drifts
+  backwards after that); SunGov starts at 3.9 s (the clip stalls at 3.5 s).
+- Stabilisation is light (vidstab smoothing 6) so intended turns are kept.
