@@ -235,7 +235,7 @@
 
         const b = document.createElement("button");
         b.type = "button";
-        b.addEventListener("click", () => scrollToTime(c.start + 0.05 * c.d));
+        b.addEventListener("click", () => scrollToTime(c.start + (c.kind === "hero" ? 0 : 0.4) * c.d));
         rail.appendChild(b);
         c.btn = b;
       });
