@@ -19,7 +19,7 @@ page can seek them smoothly while scrolling.
 | 08-sunpower | SunPower Deals | 84cf4be5-5260-4137-b244-22dab2ecd3fe (re-shot 22 Sep, golden hour; start frame cc38de9d GPT Image 2.5) |
 | 09-sunsquad | SunSquad | 9c6a6f25-6995-4ded-b494-b10e17d5b96e |
 | 10-sunchargers | SunChargers | 3a9b0ced-0331-4a72-8ad8-541e8bbbe1c7 (re-shot 22 Sep; start 1e88aec6 + end frame c6ae3d73, cars keep facing left) |
-| 11-sundex | Sundex | 34961695-83a0-4680-85de-5ecf5203c99f (re-shot 22 Sep; start 6c1ab065 + end frame ab1281cf) |
+| 11-sundex | Sundex | 017e60f3-2e5d-4fa8-b992-e2dbd6fd1b70 (re-shot 22 Sep; new start c78e56d6 made from end frame ab1281cf so the building design matches) |
 | 12-pdi | P&DI | fbd54164-02fc-4e75-9382-cabee1c8cae4 (re-shot 22 Sep; start 550b7859 + end frame 5c8b5d99) |
 | 13-flagship | Sunergies flagship | 673f5f5b-56fb-4fe3-a22e-72acd6c86c05 (re-shot 22 Sep, afterglow; start frame febc0226 GPT Image 2.5) |
 | 14-night | Night arrival | 99633309-6178-4f53-935a-47d792a1efca |
