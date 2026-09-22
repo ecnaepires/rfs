@@ -1,6 +1,6 @@
 # Footage credits — "The Road" preview
 
-Generated for RFS in the owner's Higgsfield account on 8–9 Sep 2026
+Generated for RFS in the owner's Higgsfield account on 8–9 Sep 2026 (two re-shot 22 Sep)
 (start frames: Nano Banana Flash; motion: Kling 3.0, 1080p pro, no audio).
 Masters (2212×936, 24 fps) are kept on the VPS at `/opt/rfs-footage-src/`;
 the files here are 1280-wide H.264 re-encodes with a 6-frame GOP so the
@@ -16,10 +16,13 @@ page can seek them smoothly while scrolling.
 | 05-suncashback | SunCashback | ee76becd-bbd8-4840-a4c9-4c98eb4b83b4 |
 | 06-sunlife | SunLife | 30f06031-7282-407c-a63f-12a67e19a34c |
 | 07-substation | Model (substation) | cc709edf-6b1d-4de1-96af-fbe6e5b8516c |
-| 08-sunpower | SunPower Deals | e5e0cb07-d33a-4c63-a0b3-edf76fbe5685 |
+| 08-sunpower | SunPower Deals | 84cf4be5-5260-4137-b244-22dab2ecd3fe (re-shot 22 Sep, golden hour; start frame cc38de9d GPT Image 2.5) |
 | 09-sunsquad | SunSquad | 9c6a6f25-6995-4ded-b494-b10e17d5b96e |
 | 10-sunchargers | SunChargers | 67dc74c7-0599-492e-81de-dc2f32cd291e |
 | 11-sundex | Sundex | 7b75af04-efd6-42c2-9eda-f23e8ea12be9 |
 | 12-pdi | P&DI | d90e363e-d938-4f4c-ae15-8d68b0be4853 |
-| 13-flagship | Sunergies flagship | f5612a39-ef2f-4c2a-89e9-6b480fa146e4 |
+| 13-flagship | Sunergies flagship | 673f5f5b-56fb-4fe3-a22e-72acd6c86c05 (re-shot 22 Sep, afterglow; start frame febc0226 GPT Image 2.5) |
 | 14-night | Night arrival | 99633309-6178-4f53-935a-47d792a1efca |
+- 07-substation plays right after 01-pylons so the light runs one way:
+  dawn, morning, afternoon, golden hour, sunset, afterglow, night.
+- v1 masters of the two re-shot clips are kept as *.v1.mp4 on the VPS.
