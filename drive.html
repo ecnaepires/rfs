@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RFS — The Drive</title>
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet" />
+    <style>
+      /* "The Drive": the same Higgsfield footage as footage.html, but the drive
+         plays itself. It stops at each company (highway sign -> card), the
+         straight road runs at 2x, and a road map along the bottom navigates.
+         Scroll / arrows / tap only step between stops. */
+      :root {
+        --gold: #d4af37;
+        --gold-dim: rgb(212 175 55 / .45);
+        --ink: #000;
+        --panel: rgb(8 8 10 / .78);
+        --paper: oklch(96% 0.01 90);
+        --muted: oklch(80% 0.02 90);
+        --ease: cubic-bezier(.2, .7, .2, 1);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); }
+      body { font-family: "Archivo", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+      button { font: inherit; color: inherit; }
+
+      #stage { position: fixed; inset: 0; overflow: hidden; background: #000 center / cover no-repeat; }
+      #stage video {
+        position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+        opacity: 0; transition: opacity .9s ease-in-out;
+      }
+      #stage video.active { opacity: 1; }
+      #stage::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background:
+          linear-gradient(to bottom, rgb(0 0 0 / .55), transparent 20%, transparent 64%, rgb(0 0 0 / .72)),
+          radial-gradient(ellipse at center, transparent 58%, rgb(0 0 0 / .3));
+      }
+
+      /* ---------- header ---------- */
+      header {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+        display: flex; align-items: center; gap: 10px; padding: 16px 22px;
+      }
+      header .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; }
+      header img { height: 28px; }
+      header .name { font-stretch: 125%; font-weight: 800; letter-spacing: .14em; font-size: 12px; color: var(--gold); }
+      .hbtn {
+        display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+        font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+        background: rgb(0 0 0 / .35); border: 1px solid var(--gold-dim); border-radius: 99px;
+        color: var(--paper); cursor: pointer; backdrop-filter: blur(6px);
+      }
+      .hbtn:hover { border-color: var(--gold); }
+      .hbtn[aria-pressed="true"] { color: var(--gold); border-color: var(--gold); }
+      .hbtn:focus-visible, .rm-stop:focus-visible, .card button:focus-visible, .cta:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+      .hbtn svg { width: 12px; height: 12px; fill: currentColor; }
+
+      /* ---------- highway sign ---------- */
+      .sign {
+        position: fixed; z-index: 10; top: 13vh; pointer-events: none;
+        display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; align-items: center;
+        padding: 12px 18px 12px 14px; min-width: 250px;
+        background: #0b0b0c; border: 2px solid var(--gold); border-radius: 6px;
+        box-shadow: 0 0 0 4px #0b0b0c, 0 18px 40px rgb(0 0 0 / .45);
+        opacity: 0; transform: translateY(-10px) scale(.92); transform-origin: top;
+        transition: opacity .5s var(--ease), transform .5s var(--ease);
+      }
+      .sign.on { opacity: 1; transform: none; }
+      .sign.left { left: 6vw; } .sign.right { right: 6vw; }
+      .sign .arrow {
+        grid-row: span 2; width: 34px; height: 34px; display: grid; place-items: center;
+        border: 2px solid var(--gold); border-radius: 50%; color: var(--gold);
+      }
+      .sign .arrow svg { width: 16px; height: 16px; fill: currentColor; }
+      .sign.right .arrow svg { transform: scaleX(-1); }
+      .sign .exit { font-size: 10px; font-weight: 800; letter-spacing: .26em; color: var(--gold); }
+      .sign .sname { font-stretch: 112%; font-weight: 800; font-size: 20px; line-height: 1.05; }
+      .sign .dist {
+        grid-column: 2; font: 700 11px/1 ui-monospace, "SFMono-Regular", monospace; color: var(--muted);
+        letter-spacing: .06em; margin-top: 4px;
+      }
+
+      /* ---------- company card ---------- */
+      .card {
+        position: fixed; z-index: 11; bottom: 92px; width: min(400px, calc(100vw - 32px));
+        padding: 22px 24px 18px; background: var(--panel); backdrop-filter: blur(10px);
+        border: 1px solid rgb(212 175 55 / .28); border-top: 2px solid var(--gold); border-radius: 4px;
+        opacity: 0; transform: translateY(18px); pointer-events: none;
+        transition: opacity .5s var(--ease), transform .5s var(--ease);
+      }
+      .card.on { opacity: 1; transform: none; pointer-events: auto; }
+      .card.left { left: 5vw; } .card.right { right: 5vw; }
+      .card .num { font-size: 10px; font-weight: 800; letter-spacing: .26em; color: var(--gold); }
+      .card h3 { margin: 8px 0 0; font-stretch: 118%; font-weight: 800; font-size: 30px; line-height: 1.02; }
+      .card .tag { margin-top: 6px; font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: var(--gold); }
+      .card .line { margin: 12px 0 0; font-size: 15px; line-height: 1.5; color: var(--muted); }
+      .card .more { list-style: none; margin: 0; padding: 0; overflow: hidden; max-height: 0; transition: max-height .45s var(--ease); }
+      .card.open .more { max-height: 220px; }
+      .card .more li { position: relative; padding: 7px 0 7px 16px; font-size: 14px; border-top: 1px solid rgb(255 255 255 / .08); }
+      .card .more li:first-child { margin-top: 12px; }
+      .card .more li::before { content: ""; position: absolute; left: 0; top: 14px; width: 6px; height: 6px; background: var(--gold); border-radius: 50%; }
+      .card .row { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+      .card .plus {
+        height: 32px; padding: 0 12px; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+        background: transparent; border: 1px solid var(--gold-dim); border-radius: 99px; cursor: pointer;
+      }
+      .card .plus:hover { border-color: var(--gold); }
+      .card .back {
+        width: 32px; height: 32px; margin-left: auto; display: grid; place-items: center;
+        background: transparent; border: 1px solid var(--gold-dim); border-radius: 50%; cursor: pointer;
+      }
+      .card .back svg { width: 12px; height: 12px; fill: currentColor; }
+
+      /* continue button with countdown ring */
+      .go {
+        --p: 0;
+        position: relative; height: 36px; padding: 0 16px 0 40px; cursor: pointer;
+        font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+        color: #0b0b0c; background: var(--gold); border: 0; border-radius: 99px;
+      }
+      .go::before {
+        content: ""; position: absolute; left: 8px; top: 8px; width: 20px; height: 20px; border-radius: 50%;
+        background: conic-gradient(#0b0b0c calc(var(--p) * 1turn), rgb(0 0 0 / .18) 0);
+        -webkit-mask: radial-gradient(circle, transparent 5px, #000 6px);
+                mask: radial-gradient(circle, transparent 5px, #000 6px);
+      }
+
+      /* ---------- chapter titles ---------- */
+      .title {
+        position: fixed; z-index: 10; left: 50%; top: 46%; width: min(900px, 90vw);
+        translate: -50% -50%; text-align: center; pointer-events: none;
+      }
+      .title::before {
+        content: ""; position: absolute; inset: -14% -8%; z-index: -1; opacity: 0;
+        background: radial-gradient(closest-side, rgb(0 0 0 / .62), transparent);
+        transition: opacity .6s ease;
+      }
+      .title.on::before { opacity: 1; }
+      .title .kicker { display: block; margin-bottom: 14px; font-size: 12px; font-weight: 800; letter-spacing: .3em; color: var(--gold);
+        opacity: 0; transition: opacity .6s ease; }
+      .title.on .kicker { opacity: 1; }
+      .title h1, .title h2 {
+        margin: 0; font-stretch: 125%; font-weight: 800; line-height: 1.02; letter-spacing: -.01em;
+        font-size: clamp(34px, 6vw, 84px); text-wrap: balance; text-shadow: 0 2px 30px rgb(0 0 0 / .45);
+      }
+      .title .w { display: inline-block; opacity: 0; transform: translateY(.35em); filter: blur(6px);
+        transition: opacity .7s var(--ease), transform .7s var(--ease), filter .7s var(--ease); }
+      .title.on .w { opacity: 1; transform: none; filter: none; }
+      .title p { margin: 18px auto 0; max-width: 640px; font-size: clamp(15px, 1.6vw, 19px); line-height: 1.5; font-weight: 500;
+        text-shadow: 0 1px 3px rgb(0 0 0 / .9), 0 0 18px rgb(0 0 0 / .6);
+        opacity: 0; transform: translateY(10px); transition: opacity .7s ease .5s, transform .7s var(--ease) .5s; }
+      .title.on p { opacity: 1; transform: none; }
+      .title .actions { margin-top: 26px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+        opacity: 0; transition: opacity .6s ease .9s; pointer-events: auto; }
+      .title.on .actions { opacity: 1; }
+      .title:not(.on) .actions { pointer-events: none; }
+      .cta {
+        display: inline-flex; align-items: center; height: 42px; padding: 0 20px; border-radius: 99px; cursor: pointer;
+        font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
+        color: #0b0b0c; background: var(--gold); border: 1px solid var(--gold);
+      }
+      .cta.ghost { color: var(--paper); background: rgb(0 0 0 / .35); border-color: var(--gold-dim); }
+
+      /* ---------- road map ---------- */
+      #roadmap {
+        position: fixed; z-index: 15; left: 0; right: 0; bottom: 0; height: 74px; padding: 0 5vw;
+        background: linear-gradient(to top, rgb(0 0 0 / .75), transparent);
+      }
+      .rm-track { position: absolute; left: 5vw; right: 5vw; bottom: 30px; height: 2px; background: rgb(255 255 255 / .18); }
+      .rm-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--gold); }
+      .rm-car {
+        position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%;
+        background: var(--gold); box-shadow: 0 0 0 4px rgb(212 175 55 / .25), 0 0 16px var(--gold);
+      }
+      .rm-stop {
+        position: absolute; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; padding: 0;
+        background: transparent; border: 0; cursor: pointer;
+      }
+      .rm-stop::before {
+        content: ""; position: absolute; left: 7px; top: 7px; width: 8px; height: 8px; border-radius: 50%;
+        background: #0b0b0c; border: 1.5px solid var(--gold);
+      }
+      .rm-stop.chapter::before { left: 9px; top: 5px; width: 3px; height: 12px; border-radius: 1px; background: var(--gold-dim); border: 0; }
+      .rm-stop.passed::before { background: var(--gold); }
+      .rm-stop.end::before { left: 5px; top: 5px; width: 12px; height: 12px; }
+      .rm-stop .lbl {
+        position: absolute; bottom: 20px; left: 50%; translate: -50% 0; white-space: nowrap;
+        font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--paper);
+        padding: 4px 8px; background: #0b0b0c; border: 1px solid var(--gold-dim); border-radius: 3px;
+        opacity: 0; transition: opacity .2s; pointer-events: none;
+      }
+      .rm-stop:hover .lbl, .rm-stop:focus-visible .lbl { opacity: 1; }
+      .rm-meta {
+        position: absolute; left: 5vw; right: 5vw; bottom: 42px; display: flex; justify-content: space-between;
+        font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+      }
+      .rm-meta .hint { color: rgb(255 255 255 / .5); }
+
+      /* ---------- start gate ---------- */
+      #gate {
+        position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; text-align: center;
+        background: radial-gradient(ellipse at center, rgb(0 0 0 / .35), rgb(0 0 0 / .8));
+        transition: opacity .8s ease;
+      }
+      #gate.gone { opacity: 0; pointer-events: none; }
+      #gate img { height: 64px; }
+      #gate .gname { display: block; margin-top: 16px; font-stretch: 125%; font-weight: 800; letter-spacing: .3em; font-size: 14px; color: var(--gold); }
+      #gate p { margin: 18px auto 28px; max-width: 420px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+      #gate .cta { height: 48px; padding: 0 28px; }
+      #gate .how { margin-top: 18px; font-size: 11px; letter-spacing: .14em; color: rgb(255 255 255 / .45); text-transform: uppercase; }
+
+      @media (max-width: 760px) {
+        header { padding: 12px 14px; gap: 6px; }
+        header .name, #skip .t { display: none; }
+        .hbtn { padding: 0 10px; }
+        .sign { top: 11vh; min-width: 0; }
+        .sign.left, .sign.right { left: 16px; right: auto; }
+        .card, .card.left, .card.right { left: 12px; right: 12px; width: auto; bottom: 84px; padding: 18px 18px 14px; }
+        .card h3 { font-size: 24px; }
+        .rm-meta .hint { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #stage video, .sign, .card, .title .w, .title p, .title::before { transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage" aria-hidden="true"></div>
+
+    <header>
+      <div class="brand"><img src="assets/logo.svg" alt="RFS" /><span class="name" data-t="brand"></span></div>
+      <button class="hbtn" id="play" type="button" aria-label="Pause"><svg viewBox="0 0 12 12" id="play-ico"><rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/></svg></button>
+      <button class="hbtn" id="speed" type="button" aria-pressed="false">1×</button>
+      <button class="hbtn" id="skip" type="button"><span class="t" data-t="skip"></span><svg viewBox="0 0 12 12"><path d="M1 1l5 5-5 5zM6 1l5 5-5 5z"/></svg></button>
+      <button class="hbtn" data-lang="en" type="button">EN</button>
+      <button class="hbtn" data-lang="pt" type="button">PT</button>
+    </header>
+
+    <div class="sign" id="sign" aria-hidden="true">
+      <span class="arrow"><svg viewBox="0 0 16 16"><path d="M9 2L3 8l6 6V10h5V6H9z"/></svg></span>
+      <span class="exit"></span>
+      <span class="sname"></span>
+      <span class="dist"></span>
+    </div>
+
+    <section class="card" id="card" aria-live="polite">
+      <div class="num"></div>
+      <h3></h3>
+      <div class="tag"></div>
+      <p class="line"></p>
+      <ul class="more"></ul>
+      <div class="row">
+        <button class="go" type="button"></button>
+        <button class="plus" type="button" aria-expanded="false"></button>
+        <button class="back" type="button"><svg viewBox="0 0 12 12"><path d="M8 1L3 6l5 5z"/></svg></button>
+      </div>
+    </section>
+
+    <div class="title" id="title" aria-live="polite"></div>
+
+    <nav id="roadmap" aria-label="Road map">
+      <div class="rm-meta"><span id="rm-where"></span><span class="hint" data-t="hint"></span></div>
+      <div class="rm-track"><div class="rm-fill" id="rm-fill"></div><div class="rm-car" id="rm-car"></div></div>
+    </nav>
+
+    <div id="gate">
+      <div>
+        <img src="assets/logo.svg" alt="" />
+        <span class="gname" data-t="brand"></span>
+        <p data-t="gate"></p>
+        <button class="cta" id="start" type="button" data-t="start"></button>
+        <div class="how" data-t="how"></div>
+      </div>
+    </div>
+
+    <script>
+      const UI = {
+        en: {
+          brand: "RFS HOLDING GROUP", skip: "Contact", start: "Start the drive",
+          gate: "A drive through the energy ecosystem RFS governs — ten companies, one road.",
+          how: "It plays by itself · scroll, arrows or tap to move between stops",
+          hint: "Scroll · ← → · tap", go: "Continue", more: "+ Details", less: "− Details",
+          exit: "EXIT", of: "of", pause: "Pause", play: "Play", replay: "Replay the drive",
+          visit: "Visit sunergies.com.br →", arriving: "Arriving",
+        },
+        pt: {
+          brand: "RFS GRUPO HOLDING", skip: "Contato", start: "Iniciar o percurso",
+          gate: "Um percurso pelo ecossistema de energia que a RFS governa — dez empresas, uma estrada.",
+          how: "Avança sozinho · role, use as setas ou toque para ir entre as paradas",
+          hint: "Role · ← → · toque", go: "Continuar", more: "+ Detalhes", less: "− Detalhes",
+          exit: "SAÍDA", of: "de", pause: "Pausar", play: "Reproduzir", replay: "Refazer o percurso",
+          visit: "Visite sunergies.com.br →", arriving: "Chegando",
+        },
+      };
+
+      // stop = second in the clip where the camera is looking at the building
+      // (measured from frame strips). side = where the building is on screen;
+      // the card goes on the other side so it never covers it.
+      const CLIPS = [
+        { f: "00-opener", d: 14, kind: "hero", titleAt: [0.3, 9],
+          en: { kicker: "RFS HOLDING GROUP", h: "Building the future of energy.", p: "Long-horizon governance for an integrated energy ecosystem in Brazil." },
+          pt: { kicker: "RFS GRUPO HOLDING", h: "Construindo o futuro da energia.", p: "Governança de longo prazo para um ecossistema integrado de energia no Brasil." } },
+        { f: "01-pylons", d: 10, kind: "chapter", titleAt: [1.2, 8.6], rate: 1.25,
+          en: { h: "One holding. An ecosystem of energy.", p: "Built to operate for decades, not quarters." },
+          pt: { h: "Uma holding. Um ecossistema de energia.", p: "Construído para operar por décadas, não trimestres." } },
+        { f: "07-substation", d: 10, kind: "chapter", titleAt: [1.2, 8.6], rate: 1.25,
+          en: { h: "One strategic center. One operating platform.", p: "Multiple routes to market." },
+          pt: { h: "Um centro estratégico. Uma plataforma operacional.", p: "Múltiplas rotas para o mercado." } },
+        { f: "02-usinas", d: 12, out: 10.9, stop: 6.2, side: "left", n: "Usinas de Investimento",
+          en: { t: "Generation", p: "Develops and holds power-generation assets — the base layer of the ecosystem.", s: ["Global investment funds"] },
+          pt: { t: "Geração", p: "Desenvolve e detém ativos de geração de energia — a camada-base do ecossistema.", s: ["Fundos globais de investimento"] } },
+        { f: "03-sungov", d: 10, in: 3.9, stop: 9.5, side: "right", n: "SunGov Deals",
+          en: { t: "Government", p: "PPAs, distributed generation, proprietary plants and energy-efficiency programs for the public sector.", s: ["PPAs", "Distributed generation", "Own plants", "Energy efficiency"] },
+          pt: { t: "Governo", p: "PPAs, geração distribuída, usinas próprias e programas de eficiência energética para o setor público.", s: ["PPAs", "Geração distribuída", "Usinas próprias", "Eficiência energética"] } },
+        { f: "04-sunnews", d: 12, stop: 8.4, side: "left", n: "Sun News",
+          en: { t: "Media", p: "News, blog, internal communications and podcast — the voice of the ecosystem.", s: ["News", "Blog", "Internal marketing", "Podcast"] },
+          pt: { t: "Mídia", p: "Notícias, blog, endomarketing e podcast — a voz do ecossistema.", s: ["Notícias", "Blog", "Endomarketing", "Podcast"] } },
+        { f: "05-suncashback", d: 12, stop: 9, side: "right", n: "SunCashback",
+          en: { t: "Benefits", p: "Cashback, benefits and incentives that can convert into discounts or new investments.", s: ["Cashback & benefits", "New-contract incentives", "Conversion into discounts or new investments"] },
+          pt: { t: "Benefícios", p: "Cashback, benefícios e incentivos que podem ser convertidos em descontos ou novos investimentos.", s: ["Cashback e benefícios", "Incentivo a novas contratações", "Conversão em descontos ou novos investimentos"] } },
+        { f: "06-sunlife", d: 12, stop: 8.2, side: "left", n: "SunLife",
+          en: { t: "Health", p: "Health plans, telemedicine and medical services for the group's network.", s: ["Health plan", "Telemedicine", "Medical services", "Sustainability & social responsibility"] },
+          pt: { t: "Saúde", p: "Plano de saúde, telemedicina e serviços médicos para a rede do grupo.", s: ["Plano de saúde", "Telemedicina", "Serviços médicos", "Sustentabilidade e responsabilidade social"] } },
+        { f: "08-sunpower", d: 12, stop: 8, side: "right", n: "SunPower Deals",
+          en: { t: "Corporate", p: "Long-term clean-power solutions for corporate clients, from PPAs to proprietary plants.", s: ["PPAs", "Distributed generation", "Own plants"] },
+          pt: { t: "Corporativo", p: "Soluções de energia limpa de longo prazo para clientes corporativos, de PPAs a usinas próprias.", s: ["PPAs", "Geração distribuída", "Usinas próprias"] } },
+        { f: "09-sunsquad", d: 12, stop: 8.2, side: "left", n: "SunSquad",
+          en: { t: "Partners", p: "The group's partner-development arm, connecting its network, referral programs and mentorship.", s: ["Partner & ambassador network", "Referral programs", "Mentoring & specialized teams"] },
+          pt: { t: "Parceiros", p: "A frente de desenvolvimento de parceiros do grupo, conectando rede, indicações e mentoria.", s: ["Rede de parceiros e embaixadores", "Programas de indicação", "Mentoria e times especializados"] } },
+        { f: "10-sunchargers", d: 10, stop: 9.5, side: "right", n: "SunChargers",
+          en: { t: "Mobility", p: "An EV-charging network and convenience concept integrated with clean energy.", s: ["EV-charging network", "Convenience store (concept)", "Clean-energy integration"] },
+          pt: { t: "Mobilidade", p: "Rede de eletropostos e conceito de conveniência integrados à energia limpa.", s: ["Rede de eletropostos", "Loja de conveniência (conceito)", "Integração com energia limpa"] } },
+        { f: "11-sundex", d: 10, stop: 9.5, side: "left", n: "Sundex",
+          en: { t: "Digital", p: "Tokenized solar plants and fractional participation on blockchain, designed to broaden access and liquidity.", s: ["Tokenized solar plants", "Fractional tokens", "Blockchain", "Liquidity & democratized investment"] },
+          pt: { t: "Digital", p: "Usinas solares tokenizadas e participação fracionada em blockchain, voltadas a ampliar acesso e liquidez.", s: ["Usinas solares tokenizadas", "Tokens fracionados", "Blockchain", "Liquidez e democratização do investimento"] } },
+        { f: "12-pdi", d: 10, stop: 9.5, side: "right", n: "P&DI",
+          en: { t: "Innovation", p: "Research, development, education and carbon-credit initiatives for the energy transition.", s: ["Research & development", "Energy innovation", "In-person courses & efficiency", "Carbon credits"] },
+          pt: { t: "Inovação", p: "Pesquisa, desenvolvimento, educação e iniciativas de crédito de carbono para a transição energética.", s: ["Pesquisa e desenvolvimento", "Inovação energética", "Cursos presenciais e eficiência", "Crédito de carbono"] } },
+        { f: "13-flagship", d: 10, kind: "flagship", stop: 5.5, titleAt: [1.5, 99],
+          en: { kicker: "FLAGSHIP", h: "Sunergies", p: "Since 2014, Sunergies has structured and executed solar projects end-to-end — modeling, execution, grid approval and operation — with more than 500 MW across Brazil." },
+          pt: { kicker: "CARRO-CHEFE", h: "Sunergies", p: "Desde 2014, a Sunergies estrutura e executa projetos solares de ponta a ponta — modelagem, execução, homologação e operação — com mais de 500 MW pelo Brasil." } },
+        { f: "14-night", d: 12, kind: "end", stop: 8.5, titleAt: [2, 99],
+          en: { kicker: "RFS HOLDING GROUP", h: "Built for the long horizon.", p: "Contact details to be confirmed by the owner." },
+          pt: { kicker: "RFS GRUPO HOLDING", h: "Feito para o longo horizonte.", p: "Contatos a confirmar pelo proprietário." } },
+      ];
+
+      const HOLD = 7;          // seconds a stop waits before driving on (cruise)
+      const FAST = 1.3;        // playback rate on the straight road between stops
+      const APPROACH = 3.2;    // seconds before a stop that play drops to 1x
+      const BRAKE = 1.4;       // last seconds before a stop: ease down to a crawl
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const $ = (s) => document.querySelector(s);
+      const stage = $("#stage"), sign = $("#sign"), card = $("#card"), title = $("#title");
+      const gate = $("#gate"), playBtn = $("#play"), speedBtn = $("#speed");
+      let lang = "en";
+      try { if (localStorage.getItem("rfs-lang") === "pt") lang = "pt"; } catch (e) {}
+
+      // ---- build videos + road map ----
+      let unitNo = 0;
+      const total = CLIPS.reduce((a, c) => a + c.d, 0);
+      let acc = 0;
+      CLIPS.forEach((c, i) => {
+        c.i = i; c.start = acc; acc += c.d;
+        if (c.side) c.unit = ++unitNo;
+        const v = document.createElement("video");
+        v.muted = true; v.playsInline = true; v.preload = i < 2 ? "auto" : "none";
+        v.poster = "assets/video/" + c.f + ".jpg";
+        v.src = "assets/video/" + c.f + ".mp4";
+        stage.appendChild(v);
+        c.video = v;
+
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "rm-stop" + (c.side ? "" : c.kind === "end" ? " end" : " chapter");
+        const at = c.stop != null ? c.start + c.stop : c.start + c.d * 0.3;
+        b.style.left = (at / total * 100) + "%";
+        b.innerHTML = '<span class="lbl"></span>';
+        b.addEventListener("click", (e) => { e.stopPropagation(); jumpTo(i); });
+        $(".rm-track").appendChild(b);
+        c.mark = b; c.markAt = at;
+      });
+
+      // sequential background loading after the first clips
+      let loadIdx = 2;
+      function loadNext() {
+        while (loadIdx < CLIPS.length && CLIPS[loadIdx].video.preload === "auto") loadIdx++;
+        if (loadIdx >= CLIPS.length) return;
+        const v = CLIPS[loadIdx++].video;
+        v.preload = "auto"; v.load();
+      }
+      CLIPS.forEach((c) => c.video.addEventListener("canplaythrough", loadNext, { once: true }));
+      function ensureLoaded(i) {
+        const v = CLIPS[i] && CLIPS[i].video;
+        if (v && v.preload !== "auto") { v.preload = "auto"; v.load(); }
+      }
+
+      // ---- language ----
+      function applyLang(next) {
+        lang = next;
+        document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+        try { localStorage.setItem("rfs-lang", lang); } catch (e) {}
+        document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = UI[lang][el.dataset.t]; });
+        document.querySelectorAll("[data-lang]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+        CLIPS.forEach((c) => {
+          const label = c.n || c[lang].h;
+          c.mark.querySelector(".lbl").textContent = label;
+          c.mark.setAttribute("aria-label", label);
+        });
+        renderCard(); renderTitle(true); updatePlayBtn();
+      }
+      document.querySelectorAll("[data-lang]").forEach((b) => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+
+      // ---- state ----
+      let cur = -1;            // active clip index
+      let state = "gate";      // gate | drive | stop
+      let paused = false;      // user pause (whole drive)
+      let cruise = !reduced;   // auto-continue from stops
+      let rateMult = 1;        // 1x / 2x button
+      let rateNow = 1;         // eased playback rate actually applied
+      let holdLeft = HOLD;
+      let lastTs = 0;
+      let stopDone = false;    // the current clip's stop has been served
+      let titleShown = -1;
+      let switchToken = 0;     // bumps on every clip switch; stale loads are ignored
+
+      function setActive(i, from) {
+        ensureLoaded(i); ensureLoaded(i + 1);
+        const c = CLIPS[i];
+        const prev = CLIPS[cur];
+        cur = i; stopDone = c.stop != null && from > c.stop + 0.05;
+        stage.style.backgroundImage = "url(assets/video/" + c.f + ".jpg)";
+        const v = c.video;
+        const token = ++switchToken;
+        const start = () => {
+          if (token !== switchToken) return; // a later jump already took over
+          try { v.currentTime = from; } catch (e) {}
+          v.classList.add("active");
+          setTimeout(() => {
+            if (token !== switchToken) return;
+            CLIPS.forEach((k) => { if (k !== c) { k.video.classList.remove("active"); if (!k.video.paused) k.video.pause(); } });
+          }, 950);
+          if (!paused) v.play().catch(() => {});
+        };
+        if (v.readyState >= 1) start(); else v.addEventListener("loadedmetadata", start, { once: true });
+        state = "drive";
+        hideCard();
+        renderTitle(true);
+      }
+
+      function enterStop() {
+        const c = CLIPS[cur];
+        stopDone = true;
+        c.video.pause();
+        state = "stop";
+        holdLeft = HOLD;
+        sign.classList.remove("on");
+        if (c.side) renderCard(true);
+        if (c.kind === "end") { cruise && (holdLeft = Infinity); }
+      }
+
+      function drive() {  // leave a stop and keep going
+        if (state !== "stop") return;
+        hideCard();
+        state = "drive";
+        rateNow = 0.3;  // pull away gently from the stop
+        CLIPS[cur].video.playbackRate = rateNow;
+        if (!paused) CLIPS[cur].video.play().catch(() => {});
+        if (CLIPS[cur].kind === "flagship") renderTitle(true, false);
+      }
+
+      // in/out trim the unusable head/tail of a clip (stalls, backwards drift)
+      const inPt = (c) => c.in || 0;
+      const outPt = (c) => c.out || c.video.duration || c.d;
+      function stopPoint(i) { const c = CLIPS[i]; return Math.max(inPt(c), (c.stop != null ? c.stop : 0) - APPROACH); }
+      function jumpTo(i) {
+        if (state === "gate") begin();
+        setActive(i, CLIPS[i].side || CLIPS[i].kind === "flagship" || CLIPS[i].kind === "end" ? stopPoint(i) : inPt(CLIPS[i]));
+      }
+      function nextStop() {
+        if (state === "gate") return begin();
+        if (state === "stop") return CLIPS[cur].kind === "end" ? null : drive();
+        const c = CLIPS[cur], t = c.video.currentTime;
+        if (c.stop != null && !stopDone && t < c.stop - APPROACH) return setActive(cur, stopPoint(cur));
+        for (let j = cur + 1; j < CLIPS.length; j++) if (CLIPS[j].stop != null || CLIPS[j].kind) return jumpTo(j);
+      }
+      function prevStop() {
+        if (state === "gate") return;
+        const c = CLIPS[cur];
+        const atOrPast = state === "stop" || stopDone;
+        if (c.stop != null && atOrPast && state !== "stop") return jumpTo(cur);
+        for (let j = cur - 1; j >= 0; j--) if (CLIPS[j].stop != null || CLIPS[j].kind) return jumpTo(j);
+      }
+
+      // ---- card / sign / title rendering ----
+      function renderCard(show) {
+        const c = CLIPS[cur];
+        if (!c || !c.side) return;
+        const s = c[lang];
+        card.className = "card " + (c.side === "left" ? "right" : "left") + (card.classList.contains("open") ? " open" : "") + (show || card.classList.contains("on") ? " on" : "");
+        card.querySelector(".num").textContent = UI[lang].exit + " " + String(c.unit).padStart(2, "0") + " · " + c.unit + " " + UI[lang].of + " 10";
+        card.querySelector("h3").textContent = c.n;
+        card.querySelector(".tag").textContent = s.t;
+        card.querySelector(".line").textContent = s.p;
+        card.querySelector(".more").innerHTML = "";
+        s.s.forEach((x) => { const li = document.createElement("li"); li.textContent = x; card.querySelector(".more").appendChild(li); });
+        card.querySelector(".go").textContent = UI[lang].go;
+        const open = card.classList.contains("open");
+        card.querySelector(".plus").textContent = open ? UI[lang].less : UI[lang].more;
+        card.querySelector(".plus").setAttribute("aria-expanded", String(open));
+        card.querySelector(".back").setAttribute("aria-label", "Previous");
+      }
+      function hideCard() { card.classList.remove("on", "open"); }
+      card.querySelector(".go").addEventListener("click", (e) => { e.stopPropagation(); drive(); });
+      card.querySelector(".back").addEventListener("click", (e) => { e.stopPropagation(); prevStop(); });
+      card.querySelector(".plus").addEventListener("click", (e) => {
+        e.stopPropagation(); card.classList.toggle("open"); renderCard();
+      });
+      let cardHover = false;
+      card.addEventListener("pointerenter", () => { cardHover = true; });
+      card.addEventListener("pointerleave", () => { cardHover = false; });
+
+      function renderTitle(rebuild, visible) {
+        const c = CLIPS[cur];
+        if (!c || c.side) { title.classList.remove("on"); title.innerHTML = ""; titleShown = -1; return; }
+        if (rebuild || titleShown !== cur) {
+          const s = c[lang];
+          const words = s.h.split(" ").map((w, k) => '<span class="w" style="transition-delay:' + (k * 70) + 'ms"></span>').join(" ");
+          title.innerHTML = (s.kicker ? '<span class="kicker"></span>' : "") +
+            (c.kind === "hero" ? "<h1>" : "<h2>") + words + (c.kind === "hero" ? "</h1>" : "</h2>") + "<p></p>" +
+            (c.kind === "flagship" ? '<div class="actions"><a class="cta" href="https://sunergies.com.br" target="_blank" rel="noopener"></a></div>' : "") +
+            (c.kind === "end" ? '<div class="actions"><button class="cta" type="button" id="replay"></button></div>' : "");
+          if (s.kicker) title.querySelector(".kicker").textContent = s.kicker;
+          s.h.split(" ").forEach((w, k) => { title.querySelectorAll(".w")[k].textContent = w; });
+          title.querySelector("p").textContent = s.p;
+          const a = title.querySelector(".cta");
+          if (a && c.kind === "flagship") a.textContent = UI[lang].visit;
+          if (a && c.kind === "end") { a.textContent = UI[lang].replay; a.addEventListener("click", (e) => { e.stopPropagation(); jumpTo(0); }); }
+          titleShown = cur;
+          title.classList.remove("on");
+        }
+      }
+
+      function updateSign(c, t) {
+        if (!c.side || state !== "drive" || stopDone) { sign.classList.remove("on"); return; }
+        const lead = c.stop - 0.4;
+        const on = t > Math.max(0.4, c.stop - 6.5) && t < lead;
+        sign.classList.toggle("on", on);
+        sign.classList.toggle("left", c.side === "left");
+        sign.classList.toggle("right", c.side === "right");
+        sign.querySelector(".exit").textContent = UI[lang].exit + " " + String(c.unit).padStart(2, "0");
+        sign.querySelector(".sname").textContent = c.n;
+        const m = Math.max(0, Math.round(((c.stop - t) / 6.5) * 800 / 50) * 50);
+        sign.querySelector(".dist").textContent = m > 0 ? m + " m" : "";
+      }
+
+      // ---- play / speed controls ----
+      function updatePlayBtn() {
+        playBtn.setAttribute("aria-label", paused ? UI[lang].play : UI[lang].pause);
+        playBtn.querySelector("svg").innerHTML = paused
+          ? '<path d="M2 1l9 5-9 5z"/>'
+          : '<rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/>';
+      }
+      function setPaused(p) {
+        paused = p;
+        const v = CLIPS[cur] && CLIPS[cur].video;
+        if (v && state === "drive") paused ? v.pause() : v.play().catch(() => {});
+        updatePlayBtn();
+      }
+      playBtn.addEventListener("click", (e) => { e.stopPropagation(); if (state === "gate") return begin(); setPaused(!paused); });
+      speedBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        rateMult = rateMult === 1 ? 1.5 : 1;
+        speedBtn.textContent = rateMult + "×";
+        speedBtn.setAttribute("aria-label", "Speed " + rateMult + "x");
+        speedBtn.setAttribute("aria-pressed", String(rateMult === 2));
+      });
+      $("#skip").addEventListener("click", (e) => { e.stopPropagation(); jumpTo(CLIPS.length - 1); });
+
+      // ---- input: scroll / keys / tap / swipe step between stops ----
+      let wheelLock = 0;
+      addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const now = performance.now();
+        if (now < wheelLock || Math.abs(e.deltaY) < 12) return;
+        wheelLock = now + 900;
+        e.deltaY > 0 ? nextStop() : prevStop();
+      }, { passive: false });
+      addEventListener("keydown", (e) => {
+        if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key) || (e.key === " " && state !== "gate")) { e.preventDefault(); nextStop(); }
+        else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); prevStop(); }
+        else if (e.key === "p" || e.key === "k") setPaused(!paused);
+        else if (e.key === "Enter" && state === "gate") begin();
+      });
+      let touchY = null;
+      addEventListener("touchstart", (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+      addEventListener("touchend", (e) => {
+        if (touchY == null) return;
+        const dy = touchY - e.changedTouches[0].clientY; touchY = null;
+        if (Math.abs(dy) > 50) dy > 0 ? nextStop() : prevStop();
+      }, { passive: true });
+      stage.parentElement.addEventListener("click", (e) => {
+        if (e.target.closest("button, a, .card, header, #roadmap")) return;
+        nextStop();
+      });
+
+      function begin() {
+        if (state !== "gate") return;
+        gate.classList.add("gone");
+        setTimeout(() => { gate.style.display = "none"; }, 800);
+        setActive(0, inPt(CLIPS[0]));
+        playBtn.focus({ preventScroll: true });
+      }
+      $("#start").addEventListener("click", (e) => { e.stopPropagation(); begin(); });
+
+      // ---- main loop ----
+      function loop(ts) {
+        const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0;
+        lastTs = ts;
+        const c = CLIPS[cur];
+        if (c && state !== "gate") {
+          const v = c.video;
+          const t = v.currentTime;
+
+          if (state === "drive") {
+            // speed: faster on the straight road, 1x approaching a stop, and a
+            // gentle brake over the last BRAKE seconds. The actual rate eases
+            // toward the target so there are no sudden jumps in speed.
+            let r = c.rate || 1;
+            if (c.stop != null) {
+              if (!stopDone) {
+                const toStop = c.stop - t;
+                if (toStop < BRAKE) r = 0.3 + 0.7 * (toStop / BRAKE);
+                else if (toStop < APPROACH) r = 1;
+                else r = FAST;
+              } else r = 1; // after a stop: normal speed down the road to the next clip
+            }
+            r *= rateMult;
+            rateNow += (r - rateNow) * Math.min(1, dt * 2.2);
+            if (Math.abs(v.playbackRate - rateNow) > 0.005) v.playbackRate = Math.max(0.25, rateNow);
+            // a play() can be swallowed by a load/seek racing it; keep the car moving
+            if (!paused && v.paused && !v.seeking && v.readyState >= 2 && !v.ended) v.play().catch(() => {});
+            if (v.readyState >= 2 && !v.classList.contains("active")) v.classList.add("active");
+
+            if (c.stop != null && !stopDone && t >= c.stop) enterStop();
+            else if (v.duration && t >= outPt(c) - 0.4) {
+              if (cur < CLIPS.length - 1) setActive(cur + 1, inPt(CLIPS[cur + 1]));
+              else v.pause();
+            }
+          } else if (state === "stop" && cruise && !paused && !cardHover && !card.classList.contains("open") && c.kind !== "end") {
+            holdLeft -= dt;
+            if (holdLeft <= 0) drive();
+          }
+          card.querySelector(".go").style.setProperty("--p", cruise && !paused ? String(1 - Math.max(0, holdLeft) / HOLD) : "0");
+
+          updateSign(c, t);
+          if (!c.side) {
+            const [a, b] = c.titleAt || [0, 99];
+            const on = (t >= a && t < b) || (state === "stop" && !c.side);
+            title.classList.toggle("on", on);
+          }
+
+          // road map
+          const pos = c.start + Math.min(t, c.d);
+          const pct = pos / total * 100;
+          $("#rm-fill").style.width = pct + "%";
+          $("#rm-car").style.left = pct + "%";
+          CLIPS.forEach((k) => k.mark.classList.toggle("passed", k.markAt <= pos + 0.01));
+          const where = c.side ? UI[lang].exit + " " + String(c.unit).padStart(2, "0") + " · " + c.n : c[lang].h;
+          $("#rm-where").textContent = where;
+        }
+        requestAnimationFrame(loop);
+      }
+
+      applyLang(lang);
+      updatePlayBtn();
+      stage.style.backgroundImage = "url(assets/video/00-opener.jpg)";
+      requestAnimationFrame(loop);
+      if (new URLSearchParams(location.search).has("autostart")) begin();
+    </script>
+  </body>
+</html>
