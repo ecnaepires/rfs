@@ -45,11 +45,21 @@
       }
 
       /* the photograph the frozen frame develops into */
-      #photo { position: fixed; inset: 0; z-index: 2; overflow: hidden; opacity: 0; pointer-events: none; transition: opacity 1.4s ease; }
+      #photo { position: fixed; inset: 0; z-index: 2; overflow: hidden; opacity: 0; pointer-events: none; transition: none; }
+      #photo.on { transition: opacity 1s ease; }
+      /* leaving a stop: a short dip to black instead of two scenes dissolving into each other */
+      #dip { position: fixed; inset: 0; z-index: 5; background: #000; opacity: 0; pointer-events: none; transition: opacity .45s ease-in; }
+      #dip.on { opacity: 1; }
+      #dip.out { transition: opacity .8s ease-out; }
       #photo.on { opacity: 1; }
-      #photo img { position: absolute; inset: -4%; width: 108%; height: 108%; object-fit: cover; transform-origin: 50% 55%; }
-      #photo.on img { animation: drift 14s ease-out forwards; }
-      @keyframes drift { from { transform: scale(1.08) translateY(1.5%); } to { transform: scale(1) translateY(0); } }
+      /* the still is the exact frame the video froze on, so the fade is invisible;
+         then the camera slowly pushes in toward the building's side of the road */
+      #photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; transition: opacity .5s ease; }
+      #photo.left img { transform-origin: 22% 48%; }
+      #photo.right img { transform-origin: 78% 48%; }
+      #photo.on img { animation: look 11s cubic-bezier(.2, .6, .2, 1) forwards; }
+      #photo.front img { animation: none; transform: none; }
+      @keyframes look { from { transform: scale(1); } to { transform: scale(1.32); } }
       #photo::after {
         content: ""; position: absolute; inset: 0;
         background:
@@ -268,6 +278,7 @@
     <div id="stage" aria-hidden="true"></div>
     <div id="photo" aria-hidden="true"><img alt="" /></div>
     <div id="develop" aria-hidden="true"></div>
+    <div id="dip" aria-hidden="true"></div>
     <div id="mark" aria-hidden="true"><img src="assets/logo.svg" alt="" /></div>
     <div id="odo"><span data-t="odo"></span><b id="odo-km">0.0</b><span>km</span></div>
 
@@ -403,13 +414,20 @@
       const photo = $("#photo"), photoImg = photo.querySelector("img"), develop = $("#develop"), mark = $("#mark"), odo = $("#odo");
       // preload the stop photographs
       const IMGS = {};
-      CLIPS.filter((c) => c.photo).forEach((c) => { const im = new Image(); im.src = "assets/img/stops/" + c.photo + ".jpg"; IMGS[c.photo] = im; });
-      function showPhoto(key) {
+      CLIPS.filter((c) => c.photo).forEach((c) => {
+        for (const k of c.side ? [c.photo, c.photo + "-front"] : [c.photo]) { const im = new Image(); im.src = "assets/img/stops/" + k + ".jpg"; IMGS[k] = im; }
+      });
+      function showPhoto(key, side) {
         photoImg.src = IMGS[key].src;
-        photo.classList.remove("on"); void photo.offsetWidth; photo.classList.add("on");
-        develop.classList.remove("on"); void develop.offsetWidth; develop.classList.add("on");
+        photo.className = side || ""; void photo.offsetWidth; photo.classList.add("on");
       }
-      function hidePhoto() { photo.classList.remove("on"); }
+      function hidePhoto() { photo.classList.remove("on", "front"); }
+      // "+ Details" also turns to face the building: swap to the front-on photograph
+      function facePhoto(front) {
+        const c = CLIPS[cur]; if (!c || !c.photo) return;
+        photo.classList.toggle("front", front);
+        photoImg.src = front ? IMGS[c.photo + "-front"].src : IMGS[c.photo].src;
+      }
       let lang = "en";
       try { if (localStorage.getItem("rfs-lang") === "pt") lang = "pt"; } catch (e) {}
 
@@ -512,20 +530,31 @@
         state = "stop";
         holdLeft = c.hold || HOLD;
         sign.classList.remove("on");
-        if (c.photo) showPhoto(c.photo);
+        if (c.photo) showPhoto(c.photo, c.side);
         if (c.side) renderCard(true);
         if (c.kind === "end") { holdLeft = Infinity; mark.classList.add("on"); }
         chime();
       }
 
+      let leaving = false;
+      const dip = $("#dip");
       function drive() {  // leave a stop and keep going
-        if (state !== "stop") return;
-        hideCard(); hidePhoto();
-        state = "drive";
-        rateNow = 0.3;  // pull away gently from the stop
-        CLIPS[cur].video.playbackRate = rateNow;
-        if (!paused) CLIPS[cur].video.play().catch(() => {});
-        if (CLIPS[cur].kind === "flagship") renderTitle(true, false);
+        if (state !== "stop" || leaving) return;
+        const c = CLIPS[cur];
+        const go = () => {
+          leaving = false;
+          hideCard(); hidePhoto();
+          state = "drive";
+          rateNow = 0.3;  // pull away gently from the stop
+          c.video.playbackRate = rateNow;
+          if (!paused) c.video.play().catch(() => {});
+          if (c.kind === "flagship") renderTitle(true, false);
+        };
+        if (!c.photo) return go();
+        // a photo stop: dip to black, switch scenes underneath, fade back in
+        leaving = true;
+        dip.classList.remove("out"); dip.classList.add("on");
+        setTimeout(() => { go(); setTimeout(() => { dip.classList.add("out"); dip.classList.remove("on"); setTimeout(() => dip.classList.remove("out"), 900); }, 750); }, 480);
       }
 
       // in/out trim the unusable head/tail of a clip (stalls, backwards drift)
@@ -573,7 +602,7 @@
       card.querySelector(".go").addEventListener("click", (e) => { e.stopPropagation(); drive(); });
       card.querySelector(".back").addEventListener("click", (e) => { e.stopPropagation(); prevStop(); });
       card.querySelector(".plus").addEventListener("click", (e) => {
-        e.stopPropagation(); card.classList.toggle("open"); renderCard();
+        e.stopPropagation(); card.classList.toggle("open"); renderCard(); facePhoto(card.classList.contains("open"));
       });
       let cardHover = false;
       card.addEventListener("pointerenter", () => { cardHover = true; });
